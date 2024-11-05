@@ -1,6 +1,6 @@
 resource "aws_ssm_parameter" "foo" {
   name  = "foo"
-  type  = "InvalidType"  # 유효하지 않은 값 사용
+  type  = "String"
   value = "barr"
-  overwrite = true # 기존 값 덮어쓰기 허용
+  overwrite = true  # 기존 파라미터를 덮어쓰도록 설정
 }
