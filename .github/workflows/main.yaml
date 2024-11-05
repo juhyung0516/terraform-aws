@@ -19,50 +19,56 @@ jobs:
         shell: bash
         working-directory: .
     steps:
+      # GitHub 리포지토리에서 최신 코드를 체크아웃
       - name: Git checkout
-        uses: actions/checkout@v3 # 리포지토리의 최신 코드를 가져옴
+        uses: actions/checkout@v3
 
+      # AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }} # GitHub Secrets에 저장된 IAM 역할 ARN
-          aws-region: ${{ secrets.AWS_REGION }} # GitHub Secrets에 저장된 AWS 리전
-          role-session-name: GitHub-OIDC-TERRAFORM # 세션 이름 설정
+          role-to-assume: ${{ secrets.AWS_ROLE }} # IAM 역할 ARN
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
 
+      # Terraform 버전 설정 및 설치
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.2.5 # 사용하려는 Terraform 버전 설정
+          terraform_version: 1.2.5 # 사용하려는 Terraform 버전
 
+      # Terraform 코드의 형식을 검사
       - name: Terraform fmt
         id: fmt
-        run: terraform fmt -check # Terraform 코드의 형식을 검사
+        run: terraform fmt -check
         continue-on-error: true # 형식 검사 실패 시에도 다음 단계로 계속 진행
 
-      # 날짜와 시간을 포함한 S3 키 변수 설정
+      # S3 키에 사용할 날짜와 시간을 환경 변수로 설정
       - name: Set Date and Time Variables for S3 Key
         run: |
           echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
-        # 현재 날짜와 시간을 포함하여 S3 키 설정 (예: test-202411052146/terraform.tfstate)
+        # 예시: test-202411052146/terraform.tfstate
 
+      # S3 백엔드를 사용하여 Terraform 초기화
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }} # GitHub Secrets에서 S3 버킷 이름 가져옴
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
-        # S3 백엔드 설정을 포함하여 Terraform 초기화
 
+      # Terraform 코드의 유효성 검사
       - name: Terraform Validate
         id: validate
-        run: terraform validate -no-color # Terraform 구성의 유효성 검사
+        run: terraform validate -no-color
 
+      # Terraform 계획 생성 (PR일 경우에만 실행)
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color # Terraform 실행 계획 생성
+        run: terraform plan -no-color
         if: github.event_name == 'pull_request'
-        continue-on-error: true # PR일 때 계획 생성이 실패해도 계속 진행
+        continue-on-error: true
 
-      # PR에 Terraform 검사 결과와 계획을 댓글로 추가
+      # PR에 Terraform 결과와 계획을 댓글로 추가
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
@@ -99,13 +105,29 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
-        # PR에 Terraform 결과와 계획을 댓글로 남김
 
+      # 계획 생성이 실패한 경우 작업 중단
       - name: Terraform Plan Status
         if: steps.plan.outcome == 'failure'
-        run: exit 1 # 계획 생성이 실패한 경우 작업을 중단
+        run: exit 1
 
+      # 메인 브랜치에 푸시된 경우 Terraform 적용
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false
-        # main 브랜치에 대한 푸시일 때만 Terraform apply 실행
+
+      # Infracost 설정 (비용 분석 도구 설치)
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v1
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      # Infracost를 사용하여 비용 분석 결과를 JSON 형식으로 생성
+      - name: Infracost breakdown
+        id: infracost
+        run: infracost breakdown --path=./ --format=json --out-file=infracost_output.json
+
+      # Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
+      - name: Upload Infracost output to S3
+        run: |
+          aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
