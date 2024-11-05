@@ -10,7 +10,7 @@ permissions:
   pull-requests: write # This is required for gh bot to comment PR
 env:
   TF_LOG: INFO
-  AWS_REGION: ap-northeast-2
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -25,8 +25,8 @@ jobs:
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: test_20241105
-          aws-region: ap-northeast-2
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
       - name: Setup Terraform
@@ -42,9 +42,9 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          AWS_BUCKET_NAME: github-oidc-terraform-aws-20241104
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
           AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
-        run: terraform init -backend-config="bucket=github-oidc-terraform-aws-20241104" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=ap-northeast-2"
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
       - name: Terraform Validate
         id: validate
