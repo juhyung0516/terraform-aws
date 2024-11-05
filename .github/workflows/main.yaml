@@ -31,11 +31,12 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
-      # 3. Terraform 버전 설정 및 설치
+      # 3. Terraform 버전 설정 및 설치, terraform_wrapper 설정을 비활성화
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.5 # 사용하려는 Terraform 버전
+          terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
 
       # 4. Terraform 코드의 형식을 검사
       - name: Terraform fmt
