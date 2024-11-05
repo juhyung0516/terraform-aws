@@ -1,13 +1,13 @@
-name: "Terraform action"
+name: "Terraform action with Prowler Report Upload"
 on:
   push:
     branches:
       - main
   pull_request:
 permissions:
-  id-token: write # This is required for aws oidc connection
-  contents: read # This is required for actions/checkout
-  pull-requests: write # This is required for gh bot to comment PR
+  id-token: write
+  contents: read
+  pull-requests: write
 env:
   TF_LOG: INFO
   AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -39,11 +39,17 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
+      # 날짜와 시간을 포함한 S3 키 변수 설정
+      - name: Set Date and Time Variables for S3 Key
+        run: |
+          echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
+          echo "PROWLER_REPORT_KEY=prowler-report-$(date +'%Y%m%d%H%M').json" >> $GITHUB_ENV
+        # 현재 날짜와 시간을 포함하여 Terraform 상태 파일과 Prowler 보고서의 S3 키 설정
+
       - name: Terraform Init
         id: init
         env:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
-          AWS_BUCKET_KEY_NAME: ${{ secrets.AWS_BUCKET_KEY_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
       - name: Terraform Validate
@@ -100,3 +106,20 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false
+
+      # Prowler 실행 및 JSON 보고서 생성
+      - name: Run Prowler for ISMS-P Compliance Check
+        run: |
+          curl -LO https://github.com/prowler-cloud/prowler/releases/latest/download/prowler-2.12.0-linux.zip
+          unzip prowler-2.12.0-linux.zip
+          chmod +x prowler
+          ./prowler -g isms -M json > ${{ env.PROWLER_REPORT_KEY }}
+        # Prowler가 ISMS-P 기준으로 검사 후 결과를 JSON 파일로 저장
+
+      # Prowler 보고서를 S3에 업로드
+      - name: Upload Prowler Report to S3
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: |
+          aws s3 cp ${{ env.PROWLER_REPORT_KEY }} s3://${AWS_BUCKET_NAME}/${env.PROWLER_REPORT_KEY}
+        # Prowler JSON 보고서를 S3에 업로드하여 보관
