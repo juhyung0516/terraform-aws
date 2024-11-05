@@ -19,11 +19,11 @@ jobs:
         shell: bash
         working-directory: .
     steps:
-      # GitHub 리포지토리에서 최신 코드를 체크아웃
+      # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
       - name: Git checkout
         uses: actions/checkout@v3
 
-      # AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
+      # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -31,103 +31,56 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
-      # Terraform 버전 설정 및 설치
+      # 3. Terraform 버전 설정 및 설치
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.5 # 사용하려는 Terraform 버전
 
-      # Terraform 코드의 형식을 검사
+      # 4. Terraform 코드의 형식을 검사
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
         continue-on-error: true # 형식 검사 실패 시에도 다음 단계로 계속 진행
 
-      # S3 키에 사용할 날짜와 시간을 환경 변수로 설정
+      # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
       - name: Set Date and Time Variables for S3 Key
         run: |
           echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
         # 예시: test-202411052146/terraform.tfstate
 
-      # S3 백엔드를 사용하여 Terraform 초기화
+      # 6. S3 백엔드를 사용하여 Terraform 초기화
       - name: Terraform Init
         id: init
         env:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
-      # Terraform 코드의 유효성 검사
+      # 7. Terraform 코드의 유효성 검사
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
 
-      # Terraform 계획 생성 (PR일 경우에만 실행)
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -no-color
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
+      # 8. Terraform Plan (파일에 출력)
+      - name: Terraform Plan (output to file)
+        run: terraform plan -out=plan.tfplan
 
-      # PR에 Terraform 결과와 계획을 댓글로 추가
-      - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}" # Terraform 계획 결과를 환경 변수로 설정
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
+      # 9. Terraform Plan을 JSON 형식으로 변환
+      - name: Convert Terraform plan to JSON
+        run: terraform show -json plan.tfplan > plan.json
 
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
-
-            </details>
-
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
-
-      # 계획 생성이 실패한 경우 작업 중단
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
-
-      # 메인 브랜치에 푸시된 경우 Terraform 적용
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve -input=false
-
-      # Infracost 설정 (비용 분석 도구 설치)
+      # 10. Infracost 설정 (비용 분석 도구 설치)
       - name: Setup Infracost
         uses: infracost/actions/setup@v1
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # Infracost를 사용하여 비용 분석 결과를 JSON 형식으로 생성
+      # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
       - name: Infracost breakdown
         id: infracost
-        run: infracost breakdown --path=./ --format=json --out-file=infracost_output.json
+        run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
 
-      # Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
+      # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
       - name: Upload Infracost output to S3
         run: |
           aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
