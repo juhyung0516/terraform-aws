@@ -241,22 +241,3 @@ resource "aws_flow_log" "vpc_flow_log" {
     Name = "${var.vpc_name}-vpc-flow-log"
   }
 }
-
-
-# IAM Role 생성 - VPC Flow Logs가 CloudWatch로 로그를 전송하기 위해 필요
-resource "aws_iam_role" "vpc_flow_logs_role" {
-  name = "${var.vpc_name}-vpc-flow-logs-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "vpc-flow-logs.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
