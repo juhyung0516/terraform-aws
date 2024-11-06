@@ -1,14 +1,3 @@
-# 필요한 변수 정의
-variable "public_subnet_a" {
-  description = "The ID of the first public subnet"
-  type        = string
-}
-
-variable "public_subnet_b" {
-  description = "The ID of the second public subnet"
-  type        = string
-}
-
 # Launch Configuration 설정
 resource "aws_launch_configuration" "three-tier-web-lconfig" {
   name          = "three-tier-web-launch-config"
