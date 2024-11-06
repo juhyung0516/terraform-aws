@@ -208,7 +208,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
 
 # IAM Role 생성 - VPC Flow Logs가 CloudWatch로 로그를 전송하기 위해 필요
 resource "aws_iam_role" "vpc_flow_logs_role" {
-  name = "${var.vpc_name}-vpc-flow-logs-role"
+  name = "${var.vpc_name}-flow-logs-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -227,7 +227,7 @@ resource "aws_iam_role" "vpc_flow_logs_role" {
 # IAM Policy Attachment - VPC Flow Logs의 CloudWatch 전송을 허용
 resource "aws_iam_role_policy_attachment" "vpc_flow_logs_policy" {
   role       = aws_iam_role.vpc_flow_logs_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonVpcFlowLogsRole"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonVPCFullAccess"  # 올바른 ARN으로 수정
 }
 
 # VPC Flow Logs 설정
@@ -238,6 +238,6 @@ resource "aws_flow_log" "vpc_flow_log" {
   log_destination_type = "cloud-watch-logs"
   iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
   tags = {
-    Name = "${var.vpc_name}-vpc-flow-log"
+    Name = "${var.vpc_name}-flow-log"
   }
 }
