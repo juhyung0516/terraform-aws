@@ -5,7 +5,7 @@ provider "aws" {
 # VPC 모듈 (3-Tier 아키텍처 중 하나)
 module "vpc" {
   source = "./modules/vpc"
-  vpc_name = "test-vpc"
+  vpc_name = "test2-vpc"
 }
 
 # EC2 모듈 (3-Tier 아키텍처 중 하나)
