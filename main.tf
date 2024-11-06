@@ -5,7 +5,12 @@ provider "aws" {
 # VPC 모듈 (3-Tier 아키텍처 중 하나)
 module "vpc" {
   source = "./modules/vpc"
-  vpc_name = "test2-vpc"
+}
+
+# Security Group 모듈 호출 - vpc 모듈의 VPC ID 출력값을 전달
+module "security_group" {
+  source = "./modules/security_group"
+  vpc_id = module.vpc.vpc_id  # vpc 모듈에서 출력된 vpc_id를 사용
 }
 
 # EC2 모듈 (3-Tier 아키텍처 중 하나)
