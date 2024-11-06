@@ -381,7 +381,7 @@ resource "aws_lb_listener" "three-tier-web-lb-listner" {
 }
 
 # Register the instances with the target group - web tier
-resource "aws_autoscaling_group" "three-tier-web-asg" {
+resource "aws_autoscaling_group" "three-tier-web-asg2" {
   name                 = "three-tier-web-asg"
   launch_configuration = aws_launch_configuration.three-tier-web-lconfig.id
   vpc_zone_identifier  = [aws_subnet.three-tier-pub-sub-1.id, aws_subnet.three-tier-pub-sub-2.id]
