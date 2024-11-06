@@ -30,7 +30,7 @@ resource "aws_rds_cluster" "my_rds_cluster" {
 
 # RDS 클러스터 인스턴스 생성
 resource "aws_rds_cluster_instance" "my_rds_instance" {
-  identifier            = "My-RDS-instance"
+  identifier            = "my-rds-instance"
   cluster_identifier    = aws_rds_cluster.my_rds_cluster.id
   instance_class        = "db.t3.small"  # 작은 인스턴스 클래스
   engine                = aws_rds_cluster.my_rds_cluster.engine
