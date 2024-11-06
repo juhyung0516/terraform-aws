@@ -21,7 +21,7 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # 퍼블릭 서브넷 생성 (웹 서버용)
-resource "aws_subnet" " " {
+resource "aws_subnet" "public_subnet_a" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
   availability_zone       = "${var.aws_region}a"
