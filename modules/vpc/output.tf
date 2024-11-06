@@ -19,6 +19,16 @@ output "db_subnet_b_id" {
   description = "DB-tier subnet B ID"
 }
 
+output "public_subnet_a_id" {
+  value       = aws_subnet.public_subnet_a.id
+  description = "Public subnet A ID"
+}
+
+output "public_subnet_b_id" {
+  value       = aws_subnet.public_subnet_b.id
+  description = "Public subnet B ID"
+}
+
 
 output "vpc_flow_logs_log_group_arn" {
   value = aws_cloudwatch_log_group.vpc_flow_logs.arn
