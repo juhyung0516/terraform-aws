@@ -81,7 +81,7 @@ resource "aws_subnet" "db_subnet_b" {
 
 # NAT 게이트웨이 생성 - 프라이빗 서브넷에서 외부로의 액세스가 필요할 때 사용
 resource "aws_eip" "nat_eip" {
-  vpc = true
+  associate_with_private_ip = true
 }
 
 resource "aws_nat_gateway" "nat_gw" {

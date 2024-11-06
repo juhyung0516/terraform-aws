@@ -13,6 +13,14 @@ module "security_group" {
   vpc_id = module.vpc.vpc_id  # vpc 모듈에서 출력된 vpc_id를 사용
 }
 
+# RDS 모듈 호출, VPC 모듈에서 출력된 DB 서브넷 ID를 전달
+module "rds" {
+  source = "./modules/rds"
+  db_subnet_ids = [module.vpc.db_subnet_a_id, module.vpc.db_subnet_b_id]
+  # 추가적인 RDS 설정 변수들
+}
+
+
 # EC2 모듈 (3-Tier 아키텍처 중 하나)
 # module "ec2" {
 #   source = "./modules/ec2"

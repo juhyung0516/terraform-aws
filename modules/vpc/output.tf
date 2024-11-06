@@ -3,6 +3,11 @@ output "vpc_id" {
   description = "The ID of the VPC"
 }
 
+output "db_subnet_ids" {
+  value = [aws_subnet.db_subnet_a.id, aws_subnet.db_subnet_b.id]
+  description = "List of DB-tier subnet IDs for the RDS subnet group"
+}
+
 output "vpc_flow_logs_log_group_arn" {
   value = aws_cloudwatch_log_group.vpc_flow_logs.arn
   description = "ARN of the CloudWatch Log Group for VPC Flow Logs"
