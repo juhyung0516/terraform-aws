@@ -66,32 +66,32 @@ jobs:
       - name: Terraform Plan (output to file)
         run: terraform plan -out=plan.tfplan
 
-      # 9. Terraform Plan을 JSON 형식으로 변환
-      - name: Convert Terraform plan to JSON
-        run: terraform show -json plan.tfplan > plan.json
+      # # 9. Terraform Plan을 JSON 형식으로 변환
+      # - name: Convert Terraform plan to JSON
+      #   run: terraform show -json plan.tfplan > plan.json
 
-      # 10. Infracost 설정 (비용 분석 도구 설치)
-      - name: Setup Infracost
-        uses: infracost/actions/setup@v1
-        with:
-          api-key: ${{ secrets.INFRACOST_API_KEY }}
+      # # 10. Infracost 설정 (비용 분석 도구 설치)
+      # - name: Setup Infracost
+      #   uses: infracost/actions/setup@v1
+      #   with:
+      #     api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
-      - name: Infracost breakdown
-        id: infracost
-        run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
+      # # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
+      # - name: Infracost breakdown
+      #   id: infracost
+      #   run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
 
-      # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
-      - name: Upload Infracost output to S3
-        run: |
-          aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
+      # # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
+      # - name: Upload Infracost output to S3
+      #   run: |
+      #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
 
       # # 13. Terraform Apply (AWS 리소스를 실제로 생성)
       # - name: Terraform Apply
       #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
       #   run: terraform apply -auto-approve plan.tfplan
 
-      # Terraform Destroy (AWS 리소스를 전부 삭제)
-      - name: Terraform Destroy
-        if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
-        run: terraform destroy -auto-approve
+      # # Terraform Destroy (AWS 리소스를 전부 삭제)
+      # - name: Terraform Destroy
+      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
+      #   run: terraform destroy -auto-approve
