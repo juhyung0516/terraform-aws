@@ -7,6 +7,18 @@ output "db_subnet_ids" {
   value = [aws_subnet.db_subnet_a.id, aws_subnet.db_subnet_b.id]
   description = "List of DB-tier subnet IDs for the RDS subnet group"
 }
+# modules/vpc/output.tf
+
+output "db_subnet_a_id" {
+  value       = aws_subnet.db_subnet_a.id
+  description = "DB-tier subnet A ID"
+}
+
+output "db_subnet_b_id" {
+  value       = aws_subnet.db_subnet_b.id
+  description = "DB-tier subnet B ID"
+}
+
 
 output "vpc_flow_logs_log_group_arn" {
   value = aws_cloudwatch_log_group.vpc_flow_logs.arn

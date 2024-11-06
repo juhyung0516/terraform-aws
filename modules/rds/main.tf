@@ -12,7 +12,7 @@ resource "aws_db_subnet_group" "my_subnet_group" {
 
 # RDS 클러스터 생성 (Aurora MySQL 호환)
 resource "aws_rds_cluster" "my_rds_cluster" {
-  cluster_identifier      = "My-RDS"
+  cluster_identifier      = "my-rds"
   engine                  = "aurora-mysql"
   engine_version          = "5.7.mysql_aurora.2.07.2"
   database_name           = "mydatabase"
