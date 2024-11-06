@@ -1,7 +1,7 @@
 variable "vpc_name" {
   description = "The name of the VPC"
   type        = string
-  default     = "test3-vpc"
+  default     = "test4-vpc"
 }
 
 variable "aws_region" {
