@@ -51,6 +51,7 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
+# 앱서버 생성
 module "app_server" {
   source              = "./modules/ec2"
   ami                 = var.app_ami
@@ -66,4 +67,28 @@ module "app_server" {
   db_username         = var.db_username
   db_password         = var.db_password
   rds_endpoint        = module.rds.rds_endpoint
+
+  # 불필요 항목
+  app_server_private_ip = ""
+}
+
+# 웹서버 생성
+module "web_server" {
+  source              = "./modules/ec2"
+  ami                 = var.web_ami
+  instance_type       = var.web_instance_type
+  subnet_id           = module.vpc.public_subnet_ids[0]
+  security_group_ids  = [module.sg.web_tier_sg_id]
+  project_name        = var.project_name
+
+  # IAM 인스턴스 프로파일 전달
+  iam_instance_profile = module.iam.iam_instance_profile
+
+  # App Server의 Private IP 전달
+  app_server_private_ip = module.app_server.private_ip
+
+  # 불필요 항목 정리
+  db_username         = ""
+  db_password         = ""
+  rds_endpoint        = ""
 }

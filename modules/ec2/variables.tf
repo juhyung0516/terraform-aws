@@ -44,3 +44,8 @@ variable "iam_instance_profile" {
   description = "IAM instance profile for EC2 instances"
   type        = string
 }
+
+variable "app_server_private_ip" {
+  description = "The private IP address of the App Server"
+  type        = string
+}

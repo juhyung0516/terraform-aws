@@ -96,7 +96,3 @@ variable "app_instance_type" {
 variable "app_ami" {
   description = "AMI ID for app servers"
 }
-
-variable "key_name" {
-  description = "Key pair name for EC2 instances"
-}
