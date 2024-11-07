@@ -5,7 +5,7 @@ resource "aws_instance" "app_server" {
   instance_type          = var.instance_type
   subnet_id              = var.subnet_id
   vpc_security_group_ids = var.security_group_ids
-  iam_instance_profile   = aws_iam_instance_profile.ssm_instance_profile.name
+  iam_instance_profile   = var.iam_instance_profile
 
   user_data = <<EOF
         #!/bin/bash

@@ -39,3 +39,8 @@ variable "rds_endpoint" {
   description = "RDS instance endpoint"
   type        = string
 }
+
+variable "iam_instance_profile" {
+  description = "IAM instance profile for EC2 instances"
+  type        = string
+}

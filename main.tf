@@ -4,6 +4,10 @@ provider "aws" {
   region = var.aws_region
 }
 
+module "iam" {
+  source = "./modules/iam"
+}
+
 module "vpc" {
   source = "./modules/vpc"
 
@@ -54,6 +58,9 @@ module "app_server" {
   subnet_id           = module.vpc.private_subnet_ids[0]
   security_group_ids  = [module.sg.app_tier_sg_id]
   project_name        = var.project_name
+
+  # IAM 인스턴스 프로파일 전달
+  iam_instance_profile = module.iam.iam_instance_profile
 
   # RDS 연결 정보 전달 (엔드포인트로 변경)
   db_username         = var.db_username
