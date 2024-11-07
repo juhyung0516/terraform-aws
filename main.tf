@@ -3,11 +3,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-# VPC 모듈 호출
-module "vpc" {
-  source = "./vpc.tf"
-}
-
 # EC2 모듈 (3-Tier 아키텍처 중 하나)
 # module "ec2" {
 #   source = "./modules/ec2"

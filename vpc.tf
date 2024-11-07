@@ -1,4 +1,4 @@
-# VPC
+# 1. VPC 생성 
 resource "aws_vpc" "three-tier-vpc" {
   cidr_block = var.vpc_cidr_block
   tags = {
@@ -6,7 +6,7 @@ resource "aws_vpc" "three-tier-vpc" {
   }
 }
 
-# Public Subnets
+# 2. 퍼블릭 서브넷 생성
 resource "aws_subnet" "public_subnets" {
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.three-tier-vpc.id
@@ -19,7 +19,7 @@ resource "aws_subnet" "public_subnets" {
   }
 }
 
-# Private Subnets
+# 3. 프라이빗 서브넷 생성 
 resource "aws_subnet" "private_subnets" {
   count                   = length(var.private_subnet_cidrs)
   vpc_id                  = aws_vpc.three-tier-vpc.id
@@ -30,4 +30,12 @@ resource "aws_subnet" "private_subnets" {
   tags = {
     Name = "three-tier-private-subnet-${count.index + 1}"
   }
+}
+
+# Internet Gateway
+resource "aws_internet_gateway" "three-tier-igw" {
+  tags = {
+    Name = "three-tier-igw"
+  }
+  vpc_id = aws_vpc.three-tier-vpc.id
 }
