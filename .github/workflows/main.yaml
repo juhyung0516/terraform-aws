@@ -86,12 +86,18 @@ jobs:
       #   run: |
       #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
 
-      # # 13. Terraform Apply (AWS 리소스를 실제로 생성)
-      # - name: Terraform Apply
-      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
-      #   run: terraform apply -auto-approve plan.tfplan
+      # 13. Terraform Apply (AWS 리소스를 실제로 생성)
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
+        run: terraform apply -auto-approve plan.tfplan
 
-      # # Terraform Destroy (AWS 리소스를 전부 삭제)
+      # # # Terraform Destroy (AWS 리소스를 전부 삭제)
       # - name: Terraform Destroy
       #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
-      #   run: terraform destroy -auto-approve
+      #   run: |
+      #     terraform destroy -target=module.web_server -auto-approve &&
+      #     terraform destroy -target=module.app_server -auto-approve &&
+      #     terraform destroy -target=module.rds -auto-approve &&
+      #     terraform destroy -target=module.sg -auto-approve &&
+      #     terraform destroy -target=module.vpc -auto-approve &&
+      #     terraform destroy -target=module.iam -auto-approve
