@@ -78,31 +78,15 @@ resource "aws_route_table" "three-tier-app-rt" {
 
 
 # 6. RT 연결
-resource "aws_route_table_association" "three-tier-rt-as-1" {
-  subnet_id      = aws_subnet.three-tier-pub-sub-1.id
+resource "aws_route_table_association" "public_rt_associations" {
+  count          = length(aws_subnet.public_subnets)
+  subnet_id      = aws_subnet.public_subnets[count.index].id
   route_table_id = aws_route_table.three-tier-web-rt.id
 }
 
-resource "aws_route_table_association" "three-tier-rt-as-2" {
-  subnet_id      = aws_subnet.three-tier-pub-sub-2.id
-  route_table_id = aws_route_table.three-tier-web-rt.id
-}
-
-resource "aws_route_table_association" "three-tier-rt-as-3" {
-  subnet_id      = aws_subnet.three-tier-pvt-sub-1.id
-  route_table_id = aws_route_table.three-tier-app-rt.id
-}
-resource "aws_route_table_association" "three-tier-rt-as-4" {
-  subnet_id      = aws_subnet.three-tier-pvt-sub-2.id
-  route_table_id = aws_route_table.three-tier-app-rt.id
-}
-
-resource "aws_route_table_association" "three-tier-rt-as-5" {
-  subnet_id      = aws_subnet.three-tier-pvt-sub-3.id
-  route_table_id = aws_route_table.three-tier-app-rt.id
-}
-resource "aws_route_table_association" "three-tier-rt-as-6" {
-  subnet_id      = aws_subnet.three-tier-pvt-sub-4.id
+resource "aws_route_table_association" "private_rt_associations" {
+  count          = length(aws_subnet.private_subnets)
+  subnet_id      = aws_subnet.private_subnets[count.index].id
   route_table_id = aws_route_table.three-tier-app-rt.id
 }
 
