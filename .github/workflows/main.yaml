@@ -1,110 +1,4 @@
-# name: "Terraform action"
-# on:
-#   push:
-#     branches:
-#       - main
-#   pull_request:
-# permissions:
-#   id-token: write # GitHub Actions에서 OIDC로 AWS에 인증할 때 필요한 권한
-#   contents: read # 리포지토리 콘텐츠를 읽기 위한 권한
-#   pull-requests: write # PR에서 GitHub 봇이 댓글을 달기 위한 권한
-# env:
-#   TF_LOG: INFO
-#   AWS_REGION: ${{ secrets.AWS_REGION }} # AWS 리전 설정
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-#     defaults:
-#       run:
-#         shell: bash
-#         working-directory: .
-#     steps:
-#       # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
-#       - name: Git checkout
-#         uses: actions/checkout@v3
-
-#       # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
-#       - name: Configure AWS credentials from AWS account
-#         uses: aws-actions/configure-aws-credentials@v1
-#         with:
-#           role-to-assume: ${{ secrets.AWS_ROLE }} # IAM 역할 ARN
-#           aws-region: ${{ secrets.AWS_REGION }}
-#           role-session-name: GitHub-OIDC-TERRAFORM
-
-#       # 3. Terraform 버전 설정 및 설치, terraform_wrapper 설정을 비활성화
-#       - name: Setup Terraform
-#         uses: hashicorp/setup-terraform@v2
-#         with:
-#           terraform_version: 1.2.5 # 사용하려는 Terraform 버전
-#           terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
-
-#       # 4. Terraform 코드의 형식을 검사
-#       - name: Terraform fmt
-#         id: fmt
-#         run: terraform fmt -check
-#         continue-on-error: true # 형식 검사 실패 시에도 다음 단계로 계속 진행
-
-#       # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
-#       - name: Set Date and Time Variables for S3 Key
-#         run: |
-#           echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
-#         # 예시: test-202411052146/terraform.tfstate
-
-#       # 6. S3 백엔드를 사용하여 Terraform 초기화
-#       - name: Terraform Init
-#         id: init
-#         env:
-#           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
-#         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
-
-#       # 7. Terraform 코드의 유효성 검사
-#       - name: Terraform Validate
-#         id: validate
-#         run: terraform validate -no-color
-
-#       # 8. Terraform Plan (파일에 출력)
-#       - name: Terraform Plan (output to file)
-#         run: terraform plan -out=plan.tfplan
-
-#       # # 9. Terraform Plan을 JSON 형식으로 변환
-#       # - name: Convert Terraform plan to JSON
-#       #   run: terraform show -json plan.tfplan > plan.json
-
-#       # # 10. Infracost 설정 (비용 분석 도구 설치)
-#       # - name: Setup Infracost
-#       #   uses: infracost/actions/setup@v1
-#       #   with:
-#       #     api-key: ${{ secrets.INFRACOST_API_KEY }}
-
-#       # # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
-#       # - name: Infracost breakdown
-#       #   id: infracost
-#       #   run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
-
-#       # # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
-#       # - name: Upload Infracost output to S3
-#       #   run: |
-#       #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
-
-#       # 13. Terraform Apply (AWS 리소스를 실제로 생성)
-#       # - name: Terraform Apply
-#       #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
-#       #   run: terraform apply -auto-approve plan.tfplan
-
-#       # # Terraform Destroy (AWS 리소스를 전부 삭제)
-#       - name: Terraform Destroy
-#         if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
-#         run: |
-#           terraform destroy -target=module.web_server -auto-approve &&
-#           terraform destroy -target=module.app_server -auto-approve &&
-#           terraform destroy -target=module.rds -auto-approve &&
-#           terraform destroy -target=module.sg -auto-approve &&
-#           terraform destroy -target=module.vpc -auto-approve &&
-#           terraform destroy -target=module.iam -auto-approve
-
-### 삭제용
-name: Delete Recently Created AWS Resources in Reverse Order
-
+name: "Terraform action"
 on:
   push:
     branches:
@@ -117,10 +11,13 @@ permissions:
 env:
   TF_LOG: INFO
   AWS_REGION: ${{ secrets.AWS_REGION }} # AWS 리전 설정
-
 jobs:
-  setup:
+  deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
     steps:
       # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
       - name: Git checkout
@@ -134,86 +31,189 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
-      # 3. Terraform 버전 설정 및 설치
+      # 3. Terraform 버전 설정 및 설치, terraform_wrapper 설정을 비활성화
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.5 # 사용하려는 Terraform 버전
           terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
 
-  delete_resources:
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      # AWS 인증 정보 설정
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          role-session-name: GitHub-OIDC-TERRAFORM
+      # 4. Terraform 코드의 형식을 검사
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true # 형식 검사 실패 시에도 다음 단계로 계속 진행
 
-      # 삭제 대상 시간 설정
-      - name: Set n-hour limit
+      # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
+      - name: Set Date and Time Variables for S3 Key
         run: |
-          n_hours=2  # 최근 2시간 이내 생성된 리소스만 조회
-          cutoff_time=$(date -d "$n_hours hour ago" -u +"%Y-%m-%dT%H:%M:%SZ")
-          echo "CUTOFF_TIME=$cutoff_time" >> $GITHUB_ENV
+          echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
+        # 예시: test-202411052146/terraform.tfstate
 
-      # 1. EC2 인스턴스 삭제
-      - name: Find and Delete Recent EC2 Instances
-        run: |
-          recent_instances=$(aws ec2 describe-instances --query "Reservations[].Instances[?LaunchTime>=\`$CUTOFF_TIME\`].InstanceId" --output text)
-          for instance in $recent_instances; do
-            aws ec2 terminate-instances --instance-ids $instance
-          done
-          echo "Waiting for EC2 instances to terminate..."
-          sleep 60 # EC2 인스턴스 종료 대기
+      # 6. S3 백엔드를 사용하여 Terraform 초기화
+      - name: Terraform Init
+        id: init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
-      # 2. RDS 인스턴스 삭제
-      - name: Find and Delete Recent RDS Instances
-        run: |
-          recent_rds=$(aws rds describe-db-instances --query "DBInstances[?InstanceCreateTime>=\`$CUTOFF_TIME\`].DBInstanceIdentifier" --output text)
-          for db_instance in $recent_rds; do
-            aws rds delete-db-instance --db-instance-identifier $db_instance --skip-final-snapshot
-          done
-          echo "Waiting for RDS instances to terminate..."
-          sleep 60 # RDS 인스턴스 종료 대기
+      # 7. Terraform 코드의 유효성 검사
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
 
-      # 3. NAT 게이트웨이 삭제
-      - name: Find and Delete Recent NAT Gateways
-        run: |
-          recent_nat_gateways=$(aws ec2 describe-nat-gateways --query "NatGateways[?CreateTime>=\`$CUTOFF_TIME\`].NatGatewayId" --output text)
-          for nat_gw in $recent_nat_gateways; do
-            aws ec2 delete-nat-gateway --nat-gateway-id $nat_gw
-          done
-          echo "Waiting for NAT Gateways to delete..."
-          sleep 30 # NAT 게이트웨이 삭제 대기
+      # 8. Terraform Plan (파일에 출력)
+      - name: Terraform Plan (output to file)
+        run: terraform plan -out=plan.tfplan
 
-      # 4. 서브넷 삭제
-      - name: Find and Delete Recent Subnets
-        run: |
-          recent_subnets=$(aws ec2 describe-subnets --query "Subnets[?CreationTime>=\`$CUTOFF_TIME\`].SubnetId" --output text)
-          for subnet in $recent_subnets; do
-            aws ec2 delete-subnet --subnet-id $subnet
-          done
-          echo "Waiting for Subnets to delete..."
-          sleep 30 # 서브넷 삭제 대기
+      # # 9. Terraform Plan을 JSON 형식으로 변환
+      # - name: Convert Terraform plan to JSON
+      #   run: terraform show -json plan.tfplan > plan.json
 
-      # 5. 보안 그룹 삭제
-      - name: Find and Delete Recent Security Groups
-        run: |
-          recent_sgs=$(aws ec2 describe-security-groups --query "SecurityGroups[?CreateTime>=\`$CUTOFF_TIME\` && GroupName!='default'].GroupId" --output text)
-          for sg in $recent_sgs; do
-            aws ec2 delete-security-group --group-id $sg
-          done
-          echo "Waiting for Security Groups to delete..."
-          sleep 20 # 보안 그룹 삭제 대기
+      # # 10. Infracost 설정 (비용 분석 도구 설치)
+      # - name: Setup Infracost
+      #   uses: infracost/actions/setup@v1
+      #   with:
+      #     api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # 6. VPC 삭제
-      - name: Find and Delete Recent VPCs
+      # # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
+      # - name: Infracost breakdown
+      #   id: infracost
+      #   run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
+
+      # # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
+      # - name: Upload Infracost output to S3
+      #   run: |
+      #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
+
+      # 13. Terraform Apply (AWS 리소스를 실제로 생성)
+      # - name: Terraform Apply
+      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
+      #   run: terraform apply -auto-approve plan.tfplan
+
+      # # Terraform Destroy (AWS 리소스를 전부 삭제)
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
         run: |
-          recent_vpcs=$(aws ec2 describe-vpcs --query "Vpcs[?CreationTime>=\`$CUTOFF_TIME\`].VpcId" --output text)
-          for vpc in $recent_vpcs; do
-            aws ec2 delete-vpc --vpc-id $vpc
-          done
+          terraform destroy -target=module.web_server -auto-approve &&
+          terraform destroy -target=module.app_server -auto-approve &&
+          terraform destroy -target=module.rds -auto-approve &&
+          terraform destroy -target=module.sg -auto-approve &&
+          terraform destroy -target=module.vpc -auto-approve &&
+          terraform destroy -target=module.iam -auto-approve
+
+### 삭제용
+# name: Delete Recently Created AWS Resources in Reverse Order
+
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+# permissions:
+#   id-token: write # GitHub Actions에서 OIDC로 AWS에 인증할 때 필요한 권한
+#   contents: read # 리포지토리 콘텐츠를 읽기 위한 권한
+#   pull-requests: write # PR에서 GitHub 봇이 댓글을 달기 위한 권한
+# env:
+#   TF_LOG: INFO
+#   AWS_REGION: ${{ secrets.AWS_REGION }} # AWS 리전 설정
+
+# jobs:
+#   setup:
+#     runs-on: ubuntu-latest
+#     steps:
+#       # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
+#       - name: Git checkout
+#         uses: actions/checkout@v3
+
+#       # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
+#       - name: Configure AWS credentials from AWS account
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           role-to-assume: ${{ secrets.AWS_ROLE }} # IAM 역할 ARN
+#           aws-region: ${{ secrets.AWS_REGION }}
+#           role-session-name: GitHub-OIDC-TERRAFORM
+
+#       # 3. Terraform 버전 설정 및 설치
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v2
+#         with:
+#           terraform_version: 1.2.5 # 사용하려는 Terraform 버전
+#           terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
+
+#   delete_resources:
+#     runs-on: ubuntu-latest
+#     needs: setup
+#     steps:
+#       # AWS 인증 정보 설정
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           role-to-assume: ${{ secrets.AWS_ROLE }}
+#           aws-region: ${{ secrets.AWS_REGION }}
+#           role-session-name: GitHub-OIDC-TERRAFORM
+
+#       # 삭제 대상 시간 설정
+#       - name: Set n-hour limit
+#         run: |
+#           n_hours=2  # 최근 2시간 이내 생성된 리소스만 조회
+#           cutoff_time=$(date -d "$n_hours hour ago" -u +"%Y-%m-%dT%H:%M:%SZ")
+#           echo "CUTOFF_TIME=$cutoff_time" >> $GITHUB_ENV
+
+#       # 1. EC2 인스턴스 삭제
+#       - name: Find and Delete Recent EC2 Instances
+#         run: |
+#           recent_instances=$(aws ec2 describe-instances --query "Reservations[].Instances[?LaunchTime>=\`$CUTOFF_TIME\`].InstanceId" --output text)
+#           for instance in $recent_instances; do
+#             aws ec2 terminate-instances --instance-ids $instance
+#           done
+#           echo "Waiting for EC2 instances to terminate..."
+#           sleep 60 # EC2 인스턴스 종료 대기
+
+#       # 2. RDS 인스턴스 삭제
+#       - name: Find and Delete Recent RDS Instances
+#         run: |
+#           recent_rds=$(aws rds describe-db-instances --query "DBInstances[?InstanceCreateTime>=\`$CUTOFF_TIME\`].DBInstanceIdentifier" --output text)
+#           for db_instance in $recent_rds; do
+#             aws rds delete-db-instance --db-instance-identifier $db_instance --skip-final-snapshot
+#           done
+#           echo "Waiting for RDS instances to terminate..."
+#           sleep 60 # RDS 인스턴스 종료 대기
+
+#       # 3. NAT 게이트웨이 삭제
+#       - name: Find and Delete Recent NAT Gateways
+#         run: |
+#           recent_nat_gateways=$(aws ec2 describe-nat-gateways --query "NatGateways[?CreateTime>=\`$CUTOFF_TIME\`].NatGatewayId" --output text)
+#           for nat_gw in $recent_nat_gateways; do
+#             aws ec2 delete-nat-gateway --nat-gateway-id $nat_gw
+#           done
+#           echo "Waiting for NAT Gateways to delete..."
+#           sleep 30 # NAT 게이트웨이 삭제 대기
+
+#       # 4. 서브넷 삭제
+#       - name: Find and Delete Recent Subnets
+#         run: |
+#           recent_subnets=$(aws ec2 describe-subnets --query "Subnets[?CreationTime>=\`$CUTOFF_TIME\`].SubnetId" --output text)
+#           for subnet in $recent_subnets; do
+#             aws ec2 delete-subnet --subnet-id $subnet
+#           done
+#           echo "Waiting for Subnets to delete..."
+#           sleep 30 # 서브넷 삭제 대기
+
+#       # 5. 보안 그룹 삭제
+#       - name: Find and Delete Recent Security Groups
+#         run: |
+#           recent_sgs=$(aws ec2 describe-security-groups --query "SecurityGroups[?CreateTime>=\`$CUTOFF_TIME\` && GroupName!='default'].GroupId" --output text)
+#           for sg in $recent_sgs; do
+#             aws ec2 delete-security-group --group-id $sg
+#           done
+#           echo "Waiting for Security Groups to delete..."
+#           sleep 20 # 보안 그룹 삭제 대기
+
+#       # 6. VPC 삭제
+#       - name: Find and Delete Recent VPCs
+#         run: |
+#           recent_vpcs=$(aws ec2 describe-vpcs --query "Vpcs[?CreationTime>=\`$CUTOFF_TIME\`].VpcId" --output text)
+#           for vpc in $recent_vpcs; do
+#             aws ec2 delete-vpc --vpc-id $vpc
+#           done

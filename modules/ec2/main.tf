@@ -1,9 +1,12 @@
 # modules/ec2/main.tf
 
 resource "aws_instance" "app_server" {
+
+  count                  = 2  # 각 AZ에 하나씩 생성
   ami                    = var.ami
   instance_type          = var.instance_type
   subnet_id              = var.subnet_id
+  availability_zone      = var.availability_zone
   vpc_security_group_ids = var.security_group_ids
   iam_instance_profile   = var.iam_instance_profile
 
@@ -70,6 +73,7 @@ resource "aws_instance" "web_server" {
   ami                    = var.ami
   instance_type          = var.instance_type
   subnet_id              = var.subnet_id
+  availability_zone      = var.availability_zone
   vpc_security_group_ids = var.security_group_ids
   iam_instance_profile   = var.iam_instance_profile
 

@@ -49,3 +49,9 @@ variable "app_server_private_ip" {
   description = "The private IP address of the App Server"
   type        = string
 }
+
+
+variable "availability_zone" {
+  description = "availability zone"
+  type        = string
+}

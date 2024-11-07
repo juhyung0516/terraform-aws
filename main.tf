@@ -51,12 +51,14 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
-# 앱서버 생성
+# 앱 서버 생성 (2개의 인스턴스를 서로 다른 AZ에 배치)
 module "app_server" {
   source              = "./modules/ec2"
+  count               = 2
   ami                 = var.app_ami
   instance_type       = var.app_instance_type
-  subnet_id           = module.vpc.private_subnet_ids[0]
+  availability_zone   = element(var.availability_zones, count.index)
+  subnet_id           = element(module.vpc.private_subnet_ids, count.index)  # 서로 다른 AZ의 서브넷을 순차적으로 선택
   security_group_ids  = [module.sg.app_tier_sg_id]
   project_name        = var.project_name
 
@@ -72,20 +74,22 @@ module "app_server" {
   app_server_private_ip = ""
 }
 
-# 웹서버 생성
+# 웹 서버 생성 (2개의 인스턴스를 서로 다른 AZ에 배치)
 module "web_server" {
   source              = "./modules/ec2"
+  count               = 2
   ami                 = var.web_ami
   instance_type       = var.web_instance_type
-  subnet_id           = module.vpc.public_subnet_ids[0]
+  availability_zone   = element(var.availability_zones, count.index)
+  subnet_id           = element(module.vpc.public_subnet_ids, count.index)  # 서로 다른 AZ의 서브넷을 순차적으로 선택
   security_group_ids  = [module.sg.web_tier_sg_id]
   project_name        = var.project_name
 
   # IAM 인스턴스 프로파일 전달
   iam_instance_profile = module.iam.iam_instance_profile
 
-  # App Server의 Private IP 전달
-  app_server_private_ip = module.app_server.private_ip
+  # App Server의 Private IP 전달 (첫 번째 인스턴스만 전달하도록 설정)
+  app_server_private_ip = module.app_server[0].private_ip
 
   # 불필요 항목 정리
   db_username         = ""
