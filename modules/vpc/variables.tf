@@ -1,18 +1,34 @@
-variable "vpc_name" {
-  description = "The name of the VPC"
-  type        = string
-  default     = "test4-vpc"
-}
-
 variable "aws_region" {
   description = "AWS Region"
   type        = string
-  default     = "ap-northeast-2"
 }
 
-# VPC Flow Logs에 대한 로그 보존 기간
-variable "flow_logs_retention_days" {
-  description = "Retention period for CloudWatch logs in days"
-  type        = number
-  default     = 7
+variable "vpc_name" {
+  description = "The name of the VPC"
+  type        = string
+}
+
+variable "vpc_cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+}
+
+variable "vpc_azs" {
+  description = "Availability Zones for subnets"
+  type        = list(string)
+}
+
+variable "public_subnet_cidrs" {
+  description = "CIDR blocks for public subnets"
+  type        = list(string)
+}
+
+variable "app_subnet_cidrs" {
+  description = "CIDR blocks for application subnets"
+  type        = list(string)
+}
+
+variable "db_subnet_cidrs" {
+  description = "CIDR blocks for database subnets"
+  type        = list(string)
 }
