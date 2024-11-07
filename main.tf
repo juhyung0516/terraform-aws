@@ -89,7 +89,7 @@ module "web_server" {
   iam_instance_profile = module.iam.iam_instance_profile
 
   # App Server의 Private IP 전달 (첫 번째 인스턴스만 전달하도록 설정)
-  app_server_private_ip = module.app_server[0].private_ip
+  app_server_private_ip = module.app_server.private_ips[count.index]
 
   # 불필요 항목 정리
   db_username         = ""

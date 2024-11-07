@@ -1,4 +1,6 @@
-output "private_ip" {
-  description = "The private IP address of the EC2 instance"
-  value       = aws_instance.app_server.private_ip
+# modules/ec2/outputs.tf
+
+output "private_ips" {
+  description = "The private IP addresses of the EC2 instances"
+  value       = aws_instance.app_server[*].private_ip
 }
