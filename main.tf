@@ -15,6 +15,10 @@ module "vpc" {
   public_subnet_cidrs = var.public_subnet_cidrs
   app_subnet_cidrs   = var.app_subnet_cidrs
   db_subnet_cidrs    = var.db_subnet_cidrs
+  nat_eip_associate_with_private_ip = var.nat_eip_associate_with_private_ip
+  log_retention_in_days = var.log_retention_in_days
+  flow_log_traffic_type = var.flow_log_traffic_type
+  iam_policy_arn      = var.iam_policy_arn
 }
 
 
