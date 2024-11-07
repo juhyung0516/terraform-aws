@@ -81,12 +81,22 @@ variable "multi_az" {
   type            = bool
 }
 
-# variable "security_group_ids" {
-#   description     = "List of security group IDs to associate with RDS instances"
-#   type            = list(string)
-# }
+variable "web_instance_type" {
+  description = "Instance type for web servers"
+}
 
-# variable "subnet_ids" {
-#   description     = "List of private subnet IDs for RDS instances"
-#   type            = list(string)
-# }
+variable "web_ami" {
+  description = "AMI ID for web servers"
+}
+
+variable "app_instance_type" {
+  description = "Instance type for app servers"
+}
+
+variable "app_ami" {
+  description = "AMI ID for app servers"
+}
+
+variable "key_name" {
+  description = "Key pair name for EC2 instances"
+}

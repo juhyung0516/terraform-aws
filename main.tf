@@ -46,3 +46,19 @@ module "rds" {
   db_parameter_group_name = var.db_parameter_group_name
   multi_az            = var.multi_az
 }
+
+module "web_server" {
+  source              = "./modules/ec2"
+  instance_type       = var.web_instance_type
+  ami                 = var.web_ami
+  subnet_ids          = module.vpc.public_subnet_ids
+  security_group_ids  = [module.sg.web_tier_sg_id]
+}
+
+module "app_server" {
+  source              = "./modules/ec2"
+  instance_type       = var.app_instance_type
+  ami                 = var.app_ami
+  subnet_ids          = module.vpc.private_app_subnet_ids
+  security_group_ids  = [module.sg.app_tier_sg_id]
+}

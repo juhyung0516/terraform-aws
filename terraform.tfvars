@@ -32,3 +32,9 @@ db_allocated_storage  = 20
 db_engine             = "mysql"
 db_parameter_group_name = "default.mysql8.0"
 multi_az              = true
+
+# ec2
+web_instance_type      = "t3.micro"
+web_ami                = "ami-03d31e4041396b53c"
+app_instance_type      = "t3.micro"
+app_ami                = "ami-03d31e4041396b53c"
