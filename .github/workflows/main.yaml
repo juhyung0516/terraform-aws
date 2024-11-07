@@ -19,18 +19,6 @@ jobs:
         shell: bash
         working-directory: .
     steps:
-  - name: Load tfvars file
-    run: |
-        if [ -f "terraform.tfvars" ]; then
-          echo "Loading terraform.tfvars file"
-          cat terraform.tfvars >> $GITHUB_ENV
-        elif [ -f "env.auto.tfvars" ]; then
-          echo "Loading env.auto.tfvars file"
-          cat env.auto.tfvars >> $GITHUB_ENV
-        else
-          echo "No tfvars file found"
-        fi
-
       # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
       - name: Git checkout
         uses: actions/checkout@v3
