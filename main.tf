@@ -47,18 +47,16 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
-module "web_server" {
-  source              = "./modules/ec2"
-  instance_type       = var.web_instance_type
-  ami                 = var.web_ami
-  subnet_ids          = module.vpc.public_subnet_ids
-  security_group_ids  = [module.sg.web_tier_sg_id]
-}
-
 module "app_server" {
   source              = "./modules/ec2"
-  instance_type       = var.app_instance_type
   ami                 = var.app_ami
-  subnet_ids          = module.vpc.private_subnet_ids
+  instance_type       = var.app_instance_type
+  subnet_id           = module.vpc.private_subnet_ids[0]  # 프라이빗 서브넷을 사용
   security_group_ids  = [module.sg.app_tier_sg_id]
+  project_name        = var.project_name
+
+  # RDS 연결 정보 전달
+  db_username         = var.db_username
+  db_password         = var.db_password
+  rds_private_ip      = module.rds.rds_private_ip
 }

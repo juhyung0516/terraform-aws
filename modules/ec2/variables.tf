@@ -1,21 +1,41 @@
 # modules/ec2/variables.tf
 
-variable "instance_type" {
-  description = "The type of instance to use for the EC2 server (e.g., t3.micro)"
-  type        = string
-}
-
 variable "ami" {
-  description = "The AMI ID to use for the EC2 instance"
+  description = "AMI ID for the EC2 instance"
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "List of subnet IDs where the EC2 instances will be deployed"
-  type        = list(string)
+variable "instance_type" {
+  description = "Instance type for the EC2 instance"
+  type        = string
+}
+
+variable "subnet_id" {
+  description = "Subnet ID for the EC2 instance"
+  type        = string
 }
 
 variable "security_group_ids" {
-  description = "List of security group IDs to associate with the EC2 instance"
+  description = "List of security group IDs for the EC2 instance"
   type        = list(string)
+}
+
+variable "project_name" {
+  description = "Project name for tagging resources"
+  type        = string
+}
+
+variable "db_username" {
+  description = "Username for RDS database"
+  type        = string
+}
+
+variable "db_password" {
+  description = "Password for RDS database"
+  type        = string
+}
+
+variable "rds_private_ip" {
+  description = "Private IP of the RDS instance"
+  type        = string
 }
