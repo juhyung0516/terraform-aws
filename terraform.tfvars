@@ -36,3 +36,5 @@ multi_az              = true
 # ec2
 app_ami               = "ami-03d31e4041396b53c"  # App Server에 사용할 AMI ID
 app_instance_type     = "t3.micro"
+web_ami              = "ami-03d31e4041396b53c"  # Web Server에 사용할 AMI ID
+web_instance_type    = "t3.micro"
