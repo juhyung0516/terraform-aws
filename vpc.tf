@@ -40,10 +40,6 @@ resource "aws_internet_gateway" "three-tier-igw" {
   vpc_id = aws_vpc.three-tier-vpc.id
 }
 
-# 5. NAT Gateway 생성
-resource "aws_eip" "three-tier-nat-eip" {
-  associate_with_private_ip = true
-}
 
 # NAT Gateway
 resource "aws_nat_gateway" "three-tier-natgw-01" {
@@ -54,6 +50,11 @@ resource "aws_nat_gateway" "three-tier-natgw-01" {
     Name = "three-tier-natgw-01"
   }
 }
+# 5. NAT Gateway 생성
+resource "aws_eip" "three-tier-nat-eip" {
+  vpc = true
+}
+
 
 # 6. RT 생성
 # Web Route Table
