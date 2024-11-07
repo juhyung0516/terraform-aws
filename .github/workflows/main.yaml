@@ -5,14 +5,12 @@ on:
       - main
   pull_request:
 permissions:
-  id-token: write
-  contents: read
-  pull-requests: write
-
+  id-token: write # GitHub Actions에서 OIDC로 AWS에 인증할 때 필요한 권한
+  contents: read # 리포지토리 콘텐츠를 읽기 위한 권한
+  pull-requests: write # PR에서 GitHub 봇이 댓글을 달기 위한 권한
 env:
   TF_LOG: INFO
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-
+  AWS_REGION: ${{ secrets.AWS_REGION }} # AWS 리전 설정
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -29,7 +27,7 @@ jobs:
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE }}
+          role-to-assume: ${{ secrets.AWS_ROLE }} # IAM 역할 ARN
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
@@ -37,19 +35,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.2.5
-          terraform_wrapper: false
+          terraform_version: 1.2.5 # 사용하려는 Terraform 버전
+          terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
 
       # 4. Terraform 코드의 형식을 검사
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
-        continue-on-error: true
+        continue-on-error: true # 형식 검사 실패 시에도 다음 단계로 계속 진행
 
       # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
       - name: Set Date and Time Variables for S3 Key
         run: |
           echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
+        # 예시: test-202411052146/terraform.tfstate
 
       # 6. S3 백엔드를 사용하여 Terraform 초기화
       - name: Terraform Init
@@ -67,40 +66,38 @@ jobs:
       - name: Terraform Plan (output to file)
         run: terraform plan -out=plan.tfplan
 
-      # 9. Terraform Plan을 JSON 형식으로 변환
-      - name: Convert Terraform plan to JSON
-        run: terraform show -json plan.tfplan > plan.json
+      # # 9. Terraform Plan을 JSON 형식으로 변환
+      # - name: Convert Terraform plan to JSON
+      #   run: terraform show -json plan.tfplan > plan.json
 
-      # 10. 삭제할 리소스 추출
-      - name: Extract Resource Names
-        id: extract
-        run: |
-          cat plan.json | jq -r '.resource_changes[] | select(.change.actions | index("delete")) | .address' > resources_to_delete.txt
-
-      # 11. 추출한 리소스를 대상으로 삭제 실행
-      - name: Destroy Specified Resources
-        run: |
-          while IFS= read -r resource; do
-            terraform destroy -target="$resource" -auto-approve
-          done < resources_to_delete.txt
-
-      # 12. Infracost 설정 (비용 분석 도구 설치)
+      # # 10. Infracost 설정 (비용 분석 도구 설치)
       # - name: Setup Infracost
       #   uses: infracost/actions/setup@v1
       #   with:
       #     api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      # 13. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
+      # # 11. Infracost를 사용하여 JSON 형식의 비용 분석 결과 생성
       # - name: Infracost breakdown
       #   id: infracost
       #   run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
 
-      # 14. Infracost 결과를 S3에 업로드
+      # # 12. Infracost 결과를 S3에 업로드 (파일 이름 끝에 -infracost 추가)
       # - name: Upload Infracost output to S3
       #   run: |
       #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
 
-      # 15. Terraform Apply (AWS 리소스를 실제로 생성)
+      # 13. Terraform Apply (AWS 리소스를 실제로 생성)
       # - name: Terraform Apply
-      #   if: github.ref == 'refs/heads/main'
+      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
       #   run: terraform apply -auto-approve plan.tfplan
+
+      # # Terraform Destroy (AWS 리소스를 전부 삭제)
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
+        run: |
+          terraform destroy -target=module.web_server -auto-approve &&
+          terraform destroy -target=module.app_server -auto-approve &&
+          terraform destroy -target=module.rds -auto-approve &&
+          terraform destroy -target=module.sg -auto-approve &&
+          terraform destroy -target=module.vpc -auto-approve &&
+          terraform destroy -target=module.iam -auto-approve
