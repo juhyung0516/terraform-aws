@@ -57,14 +57,14 @@ jobs:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
-      # 7. Terraform 코드의 유효성 검사
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate -no-color
+      # # 7. Terraform 코드의 유효성 검사
+      # - name: Terraform Validate
+      #   id: validate
+      #   run: terraform validate -no-color
 
-      # 8. Terraform Plan (파일에 출력)
-      - name: Terraform Plan (output to file)
-        run: terraform plan -out=plan.tfplan
+      # # 8. Terraform Plan (파일에 출력)
+      # - name: Terraform Plan (output to file)
+      #   run: terraform plan -out=plan.tfplan
 
       # # 9. Terraform Plan을 JSON 형식으로 변환
       # - name: Convert Terraform plan to JSON
@@ -87,17 +87,17 @@ jobs:
       #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
 
       # 13. Terraform Apply (AWS 리소스를 실제로 생성)
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
-        run: terraform apply -auto-approve plan.tfplan
+      # - name: Terraform Apply
+      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
+      #   run: terraform apply -auto-approve plan.tfplan
 
-      # # # Terraform Destroy (AWS 리소스를 전부 삭제)
-      # - name: Terraform Destroy
-      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
-      #   run: |
-      #     terraform destroy -target=module.web_server -auto-approve &&
-      #     terraform destroy -target=module.app_server -auto-approve &&
-      #     terraform destroy -target=module.rds -auto-approve &&
-      #     terraform destroy -target=module.sg -auto-approve &&
-      #     terraform destroy -target=module.vpc -auto-approve &&
-      #     terraform destroy -target=module.iam -auto-approve
+      # # Terraform Destroy (AWS 리소스를 전부 삭제)
+      - name: Terraform Destroy
+        if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
+        run: |
+          terraform destroy -target=module.web_server -auto-approve &&
+          terraform destroy -target=module.app_server -auto-approve &&
+          terraform destroy -target=module.rds -auto-approve &&
+          terraform destroy -target=module.sg -auto-approve &&
+          terraform destroy -target=module.vpc -auto-approve &&
+          terraform destroy -target=module.iam -auto-approve
