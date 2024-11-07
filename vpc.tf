@@ -2,7 +2,7 @@
 resource "aws_vpc" "three-tier-vpc" {
   cidr_block = var.vpc_cidr_block
   tags = {
-    Name = "three-tier-vpc"
+    Name = var.vpc_name
   }
 }
 
