@@ -40,7 +40,11 @@ resource "aws_internet_gateway" "three-tier-igw" {
   vpc_id = aws_vpc.three-tier-vpc.id
 }
 
-# 8. NAT Gateway 생성
+# 5. NAT Gateway 생성
+resource "aws_eip" "three-tier-nat-eip" {
+  associate_with_private_ip = true
+}
+
 resource "aws_nat_gateway" "three-tier-natgw-01" {
   allocation_id = aws_eip.three-tier-nat-eip.id
   subnet_id     = aws_subnet.three-tier-pub-sub-1.id
@@ -51,7 +55,7 @@ resource "aws_nat_gateway" "three-tier-natgw-01" {
   depends_on = [aws_internet_gateway.three-tier-igw]
 }
 
-# 5. RT 생성
+# 6. RT 생성
 # Web Route Table
 resource "aws_route_table" "three-tier-web-rt" {
   vpc_id = aws_vpc.three-tier-vpc.id
@@ -77,7 +81,7 @@ resource "aws_route_table" "three-tier-app-rt" {
 }
 
 
-# 6. RT 연결
+# 7. RT 연결
 resource "aws_route_table_association" "public_rt_associations" {
   count          = length(aws_subnet.public_subnets)
   subnet_id      = aws_subnet.public_subnets[count.index].id
@@ -88,10 +92,5 @@ resource "aws_route_table_association" "private_rt_associations" {
   count          = length(aws_subnet.private_subnets)
   subnet_id      = aws_subnet.private_subnets[count.index].id
   route_table_id = aws_route_table.three-tier-app-rt.id
-}
-
-# 7. 탄력적 IP 부여
-resource "aws_eip" "three-tier-nat-eip" {
-  vpc = true
 }
 
