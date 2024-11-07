@@ -36,11 +36,6 @@ variable "availability_zones" {
 }
 
 # RDS용
-variable "project_name" {
-  description = "The project name to use in resource names"
-  type        = string
-}
-
 variable "db_allocated_storage" {
   description = "The allocated storage for the RDS instance"
   type        = number
