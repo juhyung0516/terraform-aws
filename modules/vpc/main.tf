@@ -78,7 +78,7 @@ resource "aws_route_table_association" "public" {
 
 # 8. Elastic IP for NAT Gateway
 resource "aws_eip" "nat" {
-  vpc   = true
+  domain  = "vpc"
   count = 2
 
   tags = {

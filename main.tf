@@ -16,7 +16,7 @@ module "vpc" {
   availability_zones       = var.availability_zones
 }
 
-module "security_groups" {
+module "sg" {
   source = "./modules/sg"
 
   project_name = var.project_name
