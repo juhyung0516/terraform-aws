@@ -35,7 +35,7 @@ variable "db_password" {
   type        = string
 }
 
-variable "rds_private_ip" {
-  description = "Private IP of the RDS instance"
+variable "rds_endpoint" {
+  description = "RDS instance endpoint"
   type        = string
 }

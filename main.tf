@@ -51,12 +51,12 @@ module "app_server" {
   source              = "./modules/ec2"
   ami                 = var.app_ami
   instance_type       = var.app_instance_type
-  subnet_id           = module.vpc.private_subnet_ids[0]  # 프라이빗 서브넷을 사용
+  subnet_id           = module.vpc.private_subnet_ids[0]
   security_group_ids  = [module.sg.app_tier_sg_id]
   project_name        = var.project_name
 
-  # RDS 연결 정보 전달
+  # RDS 연결 정보 전달 (엔드포인트로 변경)
   db_username         = var.db_username
   db_password         = var.db_password
-  rds_private_ip      = module.rds.rds_private_ip
+  rds_endpoint        = module.rds.rds_endpoint
 }
