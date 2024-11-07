@@ -81,12 +81,12 @@ variable "multi_az" {
   type            = bool
 }
 
-variable "security_group_ids" {
-  description     = "List of security group IDs to associate with RDS instances"
-  type            = list(string)
-}
+# variable "security_group_ids" {
+#   description     = "List of security group IDs to associate with RDS instances"
+#   type            = list(string)
+# }
 
-variable "subnet_ids" {
-  description     = "List of private subnet IDs for RDS instances"
-  type            = list(string)
-}
+# variable "subnet_ids" {
+#   description     = "List of private subnet IDs for RDS instances"
+#   type            = list(string)
+# }
