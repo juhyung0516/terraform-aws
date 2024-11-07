@@ -106,19 +106,45 @@
 name: Delete Recently Created AWS Resources in Reverse Order
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+permissions:
+  id-token: write # GitHub Actions에서 OIDC로 AWS에 인증할 때 필요한 권한
+  contents: read # 리포지토리 콘텐츠를 읽기 위한 권한
+  pull-requests: write # PR에서 GitHub 봇이 댓글을 달기 위한 권한
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }} # AWS 리전 설정
 
 jobs:
-  delete_resources:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Set up AWS CLI
+      # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
+      - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: "ap-northeast-2" # 원하는 AWS 리전으로 설정
+          role-to-assume: ${{ secrets.AWS_ROLE }} # IAM 역할 ARN
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
 
+      # 3. Terraform 버전 설정 및 설치
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5 # 사용하려는 Terraform 버전
+          terraform_wrapper: false # terraform_wrapper 비활성화로 JSON 파일 유효성 유지
+
+  delete_resources:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
       - name: Set n-hour limit
         run: |
           n_hours=2  # 최근 2시간 이내 생성된 리소스만 조회
@@ -132,6 +158,8 @@ jobs:
           for instance in $recent_instances; do
             aws ec2 terminate-instances --instance-ids $instance
           done
+          echo "Waiting for EC2 instances to terminate..."
+          sleep 60
 
       # 2. RDS 인스턴스 삭제
       - name: Find and Delete Recent RDS Instances
