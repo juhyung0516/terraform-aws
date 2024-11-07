@@ -2,7 +2,7 @@
 variable "aws_region" {
   description = "AWS Region"
   type        = string
-  default = "ap-northeast-2"
+  default     = "ap-northeast-2"
 }
 
 variable "vpc_name" {
@@ -39,3 +39,22 @@ variable "private_subnet_cidrs" {
   default     = ["10.0.0.32/28", "10.0.0.48/28", "10.0.0.64/28", "10.0.0.80/28"]
 }
 
+# CIDR Block for default route
+variable "default_route_cidr" {
+  description = "CIDR block for default route"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+# Tags for Route Tables
+variable "web_route_table_name" {
+  description = "Name tag for web route table"
+  type        = string
+  default     = "three-tier-web-rt"
+}
+
+variable "app_route_table_name" {
+  description = "Name tag for app route table"
+  type        = string
+  default     = "three-tier-app-rt"
+}
