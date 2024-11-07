@@ -9,51 +9,31 @@ variable "vpc_name" {
   type        = string
 }
 
-# VPC와 서브넷 설정
+# VPC CIDR
 variable "vpc_cidr_block" {
   description = "CIDR block for the VPC"
   type        = string
+  default     = "10.0.0.0/16"
 }
 
 # 가용 영역 설정 (a와 c 영역만 사용)
 variable "vpc_azs" {
   description = "Availability Zones for subnets"
   type        = list(string)
+  default     = ["ap-northeast-1a", "ap-northeast-1c"]
 }
 
-# 서브넷 CIDR 블록을 배열로 정의
+# Public Subnets CIDR Blocks
 variable "public_subnet_cidrs" {
   description = "CIDR blocks for public subnets"
   type        = list(string)
+  default     = ["10.0.0.0/28", "10.0.0.16/28"]
 }
 
-variable "app_subnet_cidrs" {
-  description = "CIDR blocks for application subnets"
+# Private Subnets CIDR Blocks
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for private subnets"
   type        = list(string)
+  default     = ["10.0.0.32/28", "10.0.0.48/28", "10.0.0.64/28", "10.0.0.80/28"]
 }
 
-variable "db_subnet_cidrs" {
-  description = "CIDR blocks for database subnets"
-  type        = list(string)
-}
-
-# 기타 NAT 및 Flow Logs 설정
-variable "nat_eip_associate_with_private_ip" {
-  description = "Whether to associate NAT EIP with a private IP"
-  type        = bool
-}
-
-variable "log_retention_in_days" {
-  description = "Retention period for CloudWatch logs"
-  type        = number
-}
-
-variable "flow_log_traffic_type" {
-  description = "The type of traffic to log (ALL, ACCEPT, REJECT)"
-  type        = string
-}
-
-variable "iam_policy_arn" {
-  description = "ARN of the IAM policy for VPC Flow Logs"
-  type        = string
-}
