@@ -57,18 +57,30 @@ jobs:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
-      # # 7. Terraform 코드의 유효성 검사
-      # - name: Terraform Validate
-      #   id: validate
-      #   run: terraform validate -no-color
+      # 7. Terraform 코드의 유효성 검사
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
 
-      # # 8. Terraform Plan (파일에 출력)
-      # - name: Terraform Plan (output to file)
-      #   run: terraform plan -out=plan.tfplan
+      # 8. Terraform Plan (파일에 출력)
+      - name: Terraform Plan (output to file)
+        run: terraform plan -out=plan.tfplan
 
-      # # 9. Terraform Plan을 JSON 형식으로 변환
-      # - name: Convert Terraform plan to JSON
-      #   run: terraform show -json plan.tfplan > plan.json
+      # 9. Terraform Plan을 JSON 형식으로 변환
+      - name: Convert Terraform plan to JSON
+        run: terraform show -json plan.tfplan > plan.json
+
+      - name: Extract Resource Names
+      id: extract
+      run: |
+        cat plan.json | jq -r '.resource_changes[] | select(.change.actions | index("delete")) | .address' > resources_to_delete.txt
+
+        - name: Destroy Specified Resources
+      run: |
+        while IFS= read -r resource; do
+          terraform destroy -target="$resource" -auto-approve
+        done < resources_to_delete.txt
+
 
       # # 10. Infracost 설정 (비용 분석 도구 설치)
       # - name: Setup Infracost
@@ -91,13 +103,3 @@ jobs:
       #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
       #   run: terraform apply -auto-approve plan.tfplan
 
-      # # Terraform Destroy (AWS 리소스를 전부 삭제)
-      - name: Terraform Destroy
-        if: github.ref == 'refs/heads/main' # main 브랜치에서만 삭제
-        run: |
-          terraform destroy -target=module.web_server -auto-approve &&
-          terraform destroy -target=module.app_server -auto-approve &&
-          terraform destroy -target=module.rds -auto-approve &&
-          terraform destroy -target=module.sg -auto-approve &&
-          terraform destroy -target=module.vpc -auto-approve &&
-          terraform destroy -target=module.iam -auto-approve
