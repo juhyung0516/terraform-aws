@@ -45,14 +45,14 @@ resource "aws_eip" "three-tier-nat-eip" {
   associate_with_private_ip = true
 }
 
+# NAT Gateway
 resource "aws_nat_gateway" "three-tier-natgw-01" {
   allocation_id = aws_eip.three-tier-nat-eip.id
-  subnet_id     = aws_subnet.three-tier-pub-sub-1.id
+  subnet_id     = aws_subnet.public_subnets[0].id  # 퍼블릭 서브넷의 첫 번째 인덱스를 참조
 
   tags = {
     Name = "three-tier-natgw-01"
   }
-  depends_on = [aws_internet_gateway.three-tier-igw]
 }
 
 # 6. RT 생성
