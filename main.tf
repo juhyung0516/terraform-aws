@@ -59,6 +59,6 @@ module "app_server" {
   source              = "./modules/ec2"
   instance_type       = var.app_instance_type
   ami                 = var.app_ami
-  subnet_ids          = module.vpc.private_app_subnet_ids
+  subnet_ids          = module.vpc.private_subnet_ids
   security_group_ids  = [module.sg.app_tier_sg_id]
 }
