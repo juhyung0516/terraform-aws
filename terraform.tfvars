@@ -20,3 +20,15 @@ availability_zones = [
   "ap-northeast-2a",
   "ap-northeast-2c"
 ]
+
+#RDS
+# RDS 설정값들
+db_name               = "mydatabase"
+db_backup_name        = "mybackupdatabase"
+db_username           = "admin"
+db_password           = "securepassword123"
+db_instance_class     = "db.t3.micro"
+db_allocated_storage  = 20
+db_engine             = "mysql"
+db_parameter_group_name = "default.mysql8.0"
+multi_az              = true
