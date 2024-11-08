@@ -51,7 +51,7 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
-# 앱 서버 생성 AMI용
+# 앱 서버 생성 AMI용 및 AMI생성
 module "app_server" {
   source              = "./modules/ec2"
   count               = 1
@@ -71,13 +71,7 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-# 앱 서버 AMI 생성
-module "app_server_ami" {
-  source       = "./modules/ec2"
-  instance_ids  = module.app_server.app_server_ids
-  project_name = var.project_name
-}
-
+# 생성 후 AMI 참조
 output "app_server_ami_id" {
   description = "The AMI ID for the App Server"
   value       = module.app_server.app_server_ami_id  # 모듈의 output을 참조
