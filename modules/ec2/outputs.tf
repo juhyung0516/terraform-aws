@@ -5,6 +5,16 @@ output "private_ips" {
   value       = aws_instance.app_server[*].private_ip
 }
 
+output "app_server_id" {
+  description = "The ID of the App Server instance"
+  value       = aws_instance.app_server.id
+}
+
+output "web_server_id" {
+  description = "The ID of the Web Server instance"
+  value       = aws_instance.web_server.id
+}
+
 output "web_server_ami_id" {
   description = "AMI ID for the Web Server"
   value       = aws_ami_from_instance.web_server_ami.id
