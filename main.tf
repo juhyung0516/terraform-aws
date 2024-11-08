@@ -71,11 +71,6 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-variable "app_server_ami_id" {
-  description = "AMI ID for the App Server"
-  default       = module.app_server[0].app_server_ami_id
-}
-
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
