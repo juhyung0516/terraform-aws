@@ -79,11 +79,10 @@ module "app_server_ami" {
 }
 
 module "app_server_lt" {
-  source = "./modules/ec2"
-
-  project_name = var.project_name
-  ami_id       = module.app_server_ami.ami_id
-  instance_type = var.app_instance_type
+  source          = "./modules/ec2"
+  project_name    = var.project_name
+  ami_id          = module.app_server_ami_id  # 올바른 AMI ID 출력 참조
+  instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
 }
 
