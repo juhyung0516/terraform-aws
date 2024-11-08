@@ -14,33 +14,62 @@ env:
   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
-  apply:
-    name: "Apply Terraform Changes"
+  deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
     steps:
-      - name: Checkout code
+      # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
+      - name: Git checkout
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
+      # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
+      - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GitHub-OIDC-TERRAFORM
 
+      # 3. Terraform 버전 설정 및 설치, terraform_wrapper 설정을 비활성화
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.2.5
           terraform_wrapper: false
 
+      # 4. Terraform 코드의 형식을 검사
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
+      - name: Set Date and Time Variables for S3 Key
+        run: |
+          TIMESTAMP=$(date +'%Y%m%d%H%M')
+          echo "AWS_BUCKET_KEY_NAME=terraform-state/$TIMESTAMP/terraform.tfstate" >> $GITHUB_ENV
+        # 예시: terraform-state/202411052146/terraform.tfstate
+
+      # 6. S3 백엔드를 사용하여 Terraform 초기화
       - name: Terraform Init
+        id: init
         env:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
         run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
 
-      - name: Terraform Plan
+      # 7. Terraform 코드의 유효성 검사
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      # 8. Terraform Plan (파일에 출력)
+      - name: Terraform Plan (output to file)
         run: terraform plan -out=plan.tfplan
 
+      # 13. Terraform Apply (AWS 리소스를 실제로 생성)
       - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve plan.tfplan

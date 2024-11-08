@@ -35,6 +35,11 @@ jobs:
           terraform_version: 1.2.5
           terraform_wrapper: false
 
+      - name: Set Date and Time Variables for S3 Key
+        run: |
+          TIMESTAMP=$(date +'%Y%m%d%H%M')
+          echo "AWS_BUCKET_KEY_NAME=infracost/$TIMESTAMP/terraform.tfstate" >> $GITHUB_ENV
+
       - name: Terraform Init
         env:
           AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
@@ -56,4 +61,4 @@ jobs:
 
       - name: Upload Infracost Output to S3
         run: |
-          aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/infracost_output.json
+          aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/infracost/${{ env.TIMESTAMP }}/infracost_output.json
