@@ -71,12 +71,12 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-# # 앱 서버 AMI 생성
-# module "app_server_ami" {
-#   source        = "./modules/ec2"
-#   ami_id   = module.app_server.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
-#   project_name  = var.project_name
-# }
+# 앱 서버 AMI 생성
+module "app_server_ami" {
+  source        = "./modules/ec2"
+  ami_id   = module.app_server.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+  project_name  = var.project_name
+}
 
 # module "app_server_lt" {
 #   source = "./modules/ec2"

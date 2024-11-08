@@ -22,12 +22,12 @@ resource "aws_instance" "app_server" {
   }
 }
 
-# # 2 - AMI 생성 (앱 서버)
-# resource "aws_ami_from_instance" "app_server_ami" {
-#   name               = "${var.project_name}-app-server-ami"
-#   source_instance_id = aws_instance.app_server[0].id  # 첫 번째 인스턴스 참조
-#   depends_on         = [aws_instance.app_server]  # 앱 서버 생성 완료 후 AMI 생성
-# }
+# 2 - AMI 생성 (앱 서버)
+resource "aws_ami_from_instance" "app_server_ami" {
+  name               = "${var.project_name}-app-server-ami"
+  source_instance_id = aws_instance.app_server[0].id  # 첫 번째 인스턴스 참조
+  depends_on         = [aws_instance.app_server]  # 앱 서버 생성 완료 후 AMI 생성
+}
 
 # # 3 - 웹 서버 생성
 # resource "aws_instance" "web_server" {
