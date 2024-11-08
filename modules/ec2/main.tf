@@ -1,13 +1,13 @@
 # modules/ec2/main.tf
 
 # 1 - 앱 서버 생성
+# AMI를 생성할 EC2 인스턴스 정의 (앱 서버)
 resource "aws_instance" "app_server" {
-
   count                  = 1  # 각 AZ에 하나씩 생성
   ami                    = var.ami
   instance_type          = var.instance_type
-  subnet_id              = var.subnet_ids[0] # AMI 생성용이므로 첫 번째만
-  availability_zone      = var.availability_zones[0] # AMI 생성용이므로 첫 번째만
+  subnet_id              = var.subnet_ids[0]  # AMI 생성용이므로 첫 번째만
+  availability_zone      = var.availability_zones[0]  # AMI 생성용이므로 첫 번째만
   vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = var.iam_instance_profile
 
@@ -29,9 +29,10 @@ resource "aws_ami_from_instance" "app_server_ami" {
   depends_on         = [aws_instance.app_server]  # 앱 서버 생성 완료 후 AMI 생성
 }
 
+# 앱 서버의 Launch Template 생성 (AMI ID 참조)
 resource "aws_launch_template" "app_server_lt" {
   name          = "${var.project_name}-app-server-lt"
-  image_id      = var.ami_id                       # 전달된 AMI ID 사용
+  image_id      = aws_ami_from_instance.app_server_ami.id  # 생성된 AMI ID를 직접 참조
   instance_type = var.instance_type
 
   # IAM Instance Profile 설정
@@ -51,6 +52,9 @@ resource "aws_launch_template" "app_server_lt" {
     db_username  = var.db_username
     db_password  = var.db_password
   })
+
+  # AMI 생성 이후에 Launch Template이 적용되도록 설정
+  depends_on = [aws_ami_from_instance.app_server_ami]
 }
 
 
