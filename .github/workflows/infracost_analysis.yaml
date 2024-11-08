@@ -1,12 +1,11 @@
 name: "Infracost Analysis"
 
 on:
-  push:
-    branches:
-      - main # main 브랜치로 푸시될 때 실행
-  pull_request:
-    branches:
-      - "*" # 모든 브랜치에서 PR 생성 시 실행
+  workflow_run:
+    workflows: ["Terraform Plan and Cost Analysis"]
+    types:
+      - completed
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -17,18 +16,18 @@ env:
 
 jobs:
   infracost-analysis:
-    name: "Infracost Cost Analysis"
     runs-on: ubuntu-latest
+    name: "Infracost Cost Analysis"
+
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: ${{ secrets.AWS_ROLE }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          role-session-name: GitHub-OIDC-Infracost
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
