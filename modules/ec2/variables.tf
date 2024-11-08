@@ -60,10 +60,10 @@ variable "app_server_private_ip" {
   default     = ""
 }
 
-variable "app_server_id" {
+variable "app_server_ids" {
   description = "The ID of the App Server instance"
-  type        = string
-  default     = ""
+  type        = list(string)
+  default     = []
 }
 
 variable "availability_zones" {
