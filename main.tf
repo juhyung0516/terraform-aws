@@ -94,7 +94,7 @@ module "web_server" {
   iam_instance_profile = module.iam.iam_instance_profile
 
   # App Server의 Private IP 전달
-  app_server_private_ip = module.app_server.private_ips[0]
+  app_server_private_ip = module.app_server[0].private_ip
 }
 
 # 웹 서버 AMI 생성
