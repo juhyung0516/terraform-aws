@@ -5,9 +5,9 @@ output "private_ips" {
   value       = aws_instance.app_server[*].private_ip
 }
 
-output "app_server_id" {
-  description = "The ID of the App Server instance"
-  value       = aws_instance.app_server[0].id
+output "app_server_ids" {
+  description = "List of App Server instance IDs"
+  value       = [for instance in aws_instance.app_server : instance.id]
 }
 
 # output "app_server_ami_id" {

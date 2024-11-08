@@ -73,9 +73,9 @@ module "app_server" {
 
 # 앱 서버 AMI 생성
 module "app_server_ami" {
-  source        = "./modules/ec2"
-  ami_id   = module.app_server.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
-  project_name  = var.project_name
+  source = "./modules/ami"
+  ami_id = element(module.app_server.app_server_ids, 0)  # 첫 번째 App Server 인스턴스 ID
+  project_name = var.project_name
 }
 
 # module "app_server_lt" {
