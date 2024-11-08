@@ -58,7 +58,7 @@ resource "aws_ami_from_instance" "web_server_ami" {
 # Launch Template for App Server
 resource "aws_launch_template" "app_server_lt" {
   name          = "${var.project_name}-app-server-lt"
-  image_id      = module.ec2.app_server_ami_id  # AMI ID 참조
+  image_id      = var.ami_id  # AMI ID 참조
   instance_type = var.instance_type
 
   iam_instance_profile {
@@ -81,7 +81,7 @@ resource "aws_launch_template" "app_server_lt" {
 # Launch Template for Web Server
 resource "aws_launch_template" "web_server_lt" {
   name          = "${var.project_name}-web-server-lt"
-  image_id      = module.ec2.web_server_ami_id  # AMI ID 참조
+  image_id      = var.ami_id  # AMI ID 참조
   instance_type = var.instance_type
 
   iam_instance_profile {
