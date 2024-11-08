@@ -74,7 +74,7 @@ module "app_server" {
 # 앱 서버 AMI 생성
 module "app_server_ami" {
   source        = "./modules/ec2"
-  ami_id   = module.ec2.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+  ami_id   = module.app_server.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
   project_name  = var.project_name
 }
 
@@ -94,12 +94,12 @@ module "web_server" {
   iam_instance_profile = module.iam.iam_instance_profile
 
   # App Server의 Private IP 전달
-  app_server_private_ip = module.ec2.private_ips[0]
+  app_server_private_ip = module.app_server.private_ips[0]
 }
 
 # 웹 서버 AMI 생성
 module "web_server_ami" {
   source        = "./modules/ec2"
-  ami_id   = module.ec2.web_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+  ami_id   = module.web_server.web_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
   project_name  = var.project_name
 }
