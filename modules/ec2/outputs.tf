@@ -7,7 +7,7 @@ output "private_ips" {
 
 output "app_server_id" {
   description = "The ID of the App Server instance"
-  value       = aws_instance.app_server.id
+  value       = aws_instance.app_server[0].id
 }
 
 # output "app_server_ami_id" {
