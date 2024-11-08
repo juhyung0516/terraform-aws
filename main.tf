@@ -71,14 +71,10 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-locals {
-  app_server_ami_ids = module.app_server.app_server_ami_ids
-}
-
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami_id          = element(local.app_server_ami_ids, 0)  # 첫 번째 App Server AMI ID 참조
+  ami_id          = module.ec2.app_server_ami_id  # 모듈의 output을 통해 AMI ID 참조
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
 }
