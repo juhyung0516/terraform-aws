@@ -10,6 +10,11 @@ output "app_server_id" {
   value       = aws_instance.app_server.id
 }
 
+output "app_server_ami_id" {
+  description = "AMI ID for the App Server"
+  value       = aws_ami_from_instance.app_server_ami.id
+}
+
 output "web_server_id" {
   description = "The ID of the Web Server instance"
   value       = aws_instance.web_server.id
@@ -18,9 +23,4 @@ output "web_server_id" {
 output "web_server_ami_id" {
   description = "AMI ID for the Web Server"
   value       = aws_ami_from_instance.web_server_ami.id
-}
-
-output "app_server_ami_id" {
-  description = "AMI ID for the App Server"
-  value       = aws_ami_from_instance.app_server_ami.id
 }
