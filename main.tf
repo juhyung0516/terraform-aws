@@ -51,10 +51,6 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
-module "ec2" {
-  source = "./modules/ec2"
-}
-
 # 앱 서버 생성 AMI용 및 AMI생성
 module "app_server" {
   source              = "./modules/ec2"
@@ -78,7 +74,7 @@ module "app_server" {
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami_id          = module.ec2.app_server_ami_id  # 모듈의 output을 통해 AMI ID 참조
+  ami_id          = module.app_server.app_server_ami_id  # 모듈의 output을 통해 AMI ID 참조
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
 }
