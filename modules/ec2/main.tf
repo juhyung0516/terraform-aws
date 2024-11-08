@@ -8,7 +8,7 @@ resource "aws_instance" "app_server" {
   instance_type          = var.instance_type
   subnet_id              = var.subnet_ids[0] # AMI 생성용이므로 첫 번째만
   availability_zone      = var.availability_zones[0] # AMI 생성용이므로 첫 번째만
-  vpc_security_group_ids = var.security_group_ids
+  vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = var.iam_instance_profile
 
   user_data = templatefile("${path.module}/app-user-data.sh", {
@@ -35,7 +35,7 @@ resource "aws_instance" "web_server" {
   instance_type          = var.instance_type
   subnet_id              = var.subnet_ids[0] # AMI 생성용이므로 첫 번째만
   availability_zone      = var.availability_zones[0] # AMI 생성용이므로 첫 번째만
-  vpc_security_group_ids = var.security_group_ids
+  vpc_security_group_ids = [var.security_group_id]
   iam_instance_profile   = var.iam_instance_profile
 
   # User Data를 templatefile을 통해 외부 파일로부터 로드하고 변수 적용
