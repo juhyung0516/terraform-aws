@@ -79,7 +79,7 @@ output "app_server_ami_id" {
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami_id          = var.app_server_ami_id
+  ami          = var.app_server_ami_id
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
   subnet_ids     = module.vpc.private_subnet_ids
