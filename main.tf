@@ -71,28 +71,14 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-# # 생성 후 AMI 참조
-# output "app_server_ami_id" {
-#   description = "The AMI ID for the App Server"
-#   value       = module.app_server.app_server_ami_id  # 모듈의 output을 참조
-# }
-
-# 생성 후 AMI 참조
-# module "app_server_lt" {
-#   source          = "./modules/ec2"
-#   project_name    = var.project_name
-#   ami_id          = module.app_server.app_server_ami_id           # 변수로 전달
-#   instance_type   = var.app_instance_type
-#   security_group_id = module.sg.app_tier_sg_id
-#   db_username         = var.db_username
-#   db_password         = var.db_password
-#   rds_endpoint        = module.rds.rds_endpoint
-# }
+locals {
+  app_server_ami_ids = module.app_server.app_server_ami_ids
+}
 
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami_id          = element(module.app_server.app_server_ami_ids, 0)  # 첫 번째 App Server AMI ID 참조
+  ami_id          = element(local.app_server_ami_ids, 0)  # 첫 번째 App Server AMI ID 참조
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
 }
