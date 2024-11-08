@@ -46,12 +46,12 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
-      # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
       - name: Set Date and Time Variables for S3 Key
         run: |
           TIMESTAMP=$(date +'%Y%m%d%H%M')
           echo "AWS_BUCKET_KEY_NAME=terraform-state/$TIMESTAMP/terraform.tfstate" >> $GITHUB_ENV
-        # 예시: terraform-state/202411052146/terraform.tfstate
+        env:
+          AWS_BUCKET_KEY_NAME: terraform-state/${{ TIMESTAMP }}/terraform.tfstate
 
       # 6. S3 백엔드를 사용하여 Terraform 초기화
       - name: Terraform Init
