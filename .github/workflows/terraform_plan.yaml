@@ -1,0 +1,62 @@
+name: "Terraform Plan and Cost Analysis"
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. GitHub 리포지토리에서 최신 코드를 체크아웃
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. AWS 인증 정보 설정 (GitHub에서 AWS에 인증하기 위해 OIDC 사용)
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      # 3. Terraform 설치 및 설정
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5
+          terraform_wrapper: false
+
+      # 4. Terraform 코드의 형식을 검사
+      - name: Terraform fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      # 5. S3 키에 사용할 날짜와 시간을 환경 변수로 설정
+      - name: Set Date and Time Variables for S3 Key
+        run: |
+          echo "AWS_BUCKET_KEY_NAME=test-$(date +'%Y%m%d%H%M')/terraform.tfstate" >> $GITHUB_ENV
+
+      # 6. S3 백엔드를 사용하여 Terraform 초기화
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      # 7. Terraform Plan (결과를 파일에 출력)
+      - name: Terraform Plan (output to file)
+        run: terraform plan -out=plan.tfplan
+
+      # 8. Plan 파일을 JSON 형식으로 변환 (Infracost 분석을 위해)
+      - name: Convert Terraform plan to JSON
+        run: terraform show -json plan.tfplan > plan.json
