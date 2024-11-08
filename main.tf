@@ -76,16 +76,10 @@ output "app_server_ami_id" {
   value       = module.app_server[0].app_server_ami_id
 }
 
-# 새롭게 정의된 변수에 `output` 참조
-variable "ami_app_id" {
-  description = "The AMI ID for App Server"
-  default     = module.app_server[0].app_server_ami_id
-}
-
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami          = var.ami_app_id
+  ami          = output.app_server_ami_id
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
   subnet_ids     = module.vpc.private_subnet_ids
