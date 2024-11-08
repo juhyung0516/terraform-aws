@@ -86,10 +86,10 @@ jobs:
       #       #   run: |
       #       #     aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/test-$(date +'%Y%m%d%H%M')-infracost.json
 
-      # 13. Terraform Apply (AWS 리소스를 실제로 생성)
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
-        run: terraform apply -auto-approve plan.tfplan
+      # # 13. Terraform Apply (AWS 리소스를 실제로 생성)
+      # - name: Terraform Apply
+      #   if: github.ref == 'refs/heads/main' # main 브랜치에서만 적용
+      #   run: terraform apply -auto-approve plan.tfplan
 # ## 삭제용
 # name: Delete Recently Created AWS Resources in Reverse Order
 

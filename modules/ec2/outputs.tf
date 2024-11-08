@@ -5,11 +5,11 @@ output "private_ips" {
   value       = aws_instance.app_server[*].private_ip
 }
 
-output "app_server_ids" {
-  description = "The IDs of the App Server instances"
-  value       = [for instance in aws_instance.app_server : instance.id]
+# AMI ID를 출력하여 상위에서 참조할 수 있도록 설정
+output "app_server_ami_id" {
+  description = "The AMI ID for the app server"
+  value       = aws_ami_from_instance.app_server_ami.id
 }
-
 
 # output "app_server_ami_id" {
 #   description = "AMI ID for the App Server"
