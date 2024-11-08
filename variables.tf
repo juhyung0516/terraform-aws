@@ -102,8 +102,3 @@ variable "app_server_ami_id" {
   description = "The AMI ID for the App Server"
   type        = string
 }
-
-variable "app_server_ami_id" {
-  description = "AMI ID for the App Server"
-  default       = module.app_server[0].app_server_ami_id
-}

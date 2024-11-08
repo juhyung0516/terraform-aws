@@ -48,4 +48,4 @@ jobs:
 
       - name: Upload JSON Report to S3
         run: |
-          aws s3 cp "prowler-report-${{ env.TIMESTAMP }}.json" s3://prowler-report-cs-0001/deploy-report/prowler-report-${{ env.TIMESTAMP }}.json
+          aws s3 cp "prowler-report-${{ env.TIMESTAMP }}.json" s3://prowler/deploy-report/prowler-report-${{ env.TIMESTAMP }}.json
