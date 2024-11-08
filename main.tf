@@ -102,7 +102,7 @@ module "web_server" {
   iam_instance_profile = module.iam.iam_instance_profile
 
   # App Server의 Private IP 전달
-  app_server_private_ip = element(module.app_server.private_ips, 0)  # 첫 번째 인스턴스의 IP
+  app_server_private_ip = element(module.app_server.private_ips, 0)  # 첫 번째 인스턴스의 private IP
 }
 
 # 웹 서버 AMI 생성
