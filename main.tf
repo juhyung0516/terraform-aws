@@ -79,27 +79,27 @@ module "app_server_ami" {
 }
 
 
-# 웹 서버 생성
-module "web_server" {
-  source              = "./modules/ec2"
-  count               = 1
-  ami                 = var.web_ami
-  instance_type       = var.web_instance_type
-  availability_zones  = var.availability_zones
-  subnet_ids          = module.vpc.public_subnet_ids  # 서로 다른 AZ의 서브넷을 순차적으로 선택
-  security_group_ids  = [module.sg.web_tier_sg_id]
-  project_name        = var.project_name
+# # 웹 서버 생성
+# module "web_server" {
+#   source              = "./modules/ec2"
+#   count               = 1
+#   ami                 = var.web_ami
+#   instance_type       = var.web_instance_type
+#   availability_zones  = var.availability_zones
+#   subnet_ids          = module.vpc.public_subnet_ids  # 서로 다른 AZ의 서브넷을 순차적으로 선택
+#   security_group_ids  = [module.sg.web_tier_sg_id]
+#   project_name        = var.project_name
 
-  # IAM 인스턴스 프로파일 전달
-  iam_instance_profile = module.iam.iam_instance_profile
+#   # IAM 인스턴스 프로파일 전달
+#   iam_instance_profile = module.iam.iam_instance_profile
 
-  # App Server의 Private IP 전달
-  app_server_private_ip = module.app_server[0].private_ip
-}
+#   # App Server의 Private IP 전달
+#   app_server_private_ip = module.app_server.private_ips[0]
+# }
 
-# 웹 서버 AMI 생성
-module "web_server_ami" {
-  source        = "./modules/ec2"
-  ami_id   = module.web_server.web_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
-  project_name  = var.project_name
-}
+# # 웹 서버 AMI 생성
+# module "web_server_ami" {
+#   source        = "./modules/ec2"
+#   ami_id   = module.web_server.web_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+#   project_name  = var.project_name
+# }
