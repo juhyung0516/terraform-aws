@@ -1,117 +1,100 @@
 # modules/ec2/main.tf
 
+# 1 - 앱 서버 생성
 resource "aws_instance" "app_server" {
 
-  count                  = 2  # 각 AZ에 하나씩 생성
+  count                  = 1  # 각 AZ에 하나씩 생성
   ami                    = var.ami
   instance_type          = var.instance_type
-  subnet_id              = var.subnet_id
-  availability_zone      = var.availability_zone
+  subnet_id              = var.subnet_ids[0] # AMI 생성용이므로 첫 번째만
+  availability_zone      = var.availability_zones[0] # AMI 생성용이므로 첫 번째만
   vpc_security_group_ids = var.security_group_ids
   iam_instance_profile   = var.iam_instance_profile
 
-  user_data = <<EOF
-        #!/bin/bash
-        # 업데이트 및 필요한 패키지 설치
-        yum update -y
-        yum install -y httpd wget mariadb
-
-        # HTTP 서비스 시작
-        systemctl start httpd
-        systemctl enable httpd
-
-        # Web Server가 접근할 수 있는 App Server 테스트 페이지 생성
-        cat <<EOT > /var/www/html/test
-        <html>
-        <head><title>App Server - 연결 테스트</title></head>
-        <body>
-        <h1>App Server - Web Server로부터의 연결 확인됨</h1>
-        <p>App Server 연결 성공</p>
-        </body>
-        </html>
-        EOT
-
-        # DB 연결 테스트 페이지 생성
-        cat <<EOT > /var/www/html/db_test
-        <html>
-        <head><title>App Server - DB 연결 테스트</title></head>
-        <body>
-        <h1>App Server - DB 연결 테스트 결과</h1>
-        EOT
-
-        # DB 연결 확인 및 결과 출력 스크립트
-        cat <<'EOT' >> /var/www/html/db_test
-        <?php
-        $servername = "${var.rds_endpoint}";
-        $username = "${var.db_username}";
-        $password = "${var.db_password}";
-
-        $conn = new mysqli($servername, $username, $password);
-
-        if ($conn->connect_error) {
-            echo "<p>DB 연결 실패: " . $conn->connect_error . "</p>";
-        } else {
-            echo "<p>DB 연결 성공</p>";
-        }
-        $conn->close();
-        ?>
-        </body>
-        </html>
-        EOT
-EOF
+  user_data = templatefile("${path.module}/app-user-data.sh", {
+    rds_endpoint = var.rds_endpoint
+    db_username  = var.db_username
+    db_password  = var.db_password
+  })
 
   tags = {
     Name = "${var.project_name}-app-server"
   }
 }
 
-# modules/ec2/main.tf (User Data 부분만)
+# 2 - AMI 생성 (앱 서버)
+resource "aws_ami_from_instance" "app_server_ami" {
+  name               = "${var.project_name}-app-server-ami"
+  source_instance_id = aws_instance.app_server.id
+  depends_on         = [aws_instance.app_server]  # 앱 서버 생성 완료 후 AMI 생성
+}
 
-# modules/ec2/main.tf (User Data 부분만 수정)
-
+# 3 - 웹 서버 생성
 resource "aws_instance" "web_server" {
   ami                    = var.ami
   instance_type          = var.instance_type
-  subnet_id              = var.subnet_id
-  availability_zone      = var.availability_zone
+  subnet_id              = var.subnet_ids[0] # AMI 생성용이므로 첫 번째만
+  availability_zone      = var.availability_zones[0] # AMI 생성용이므로 첫 번째만
   vpc_security_group_ids = var.security_group_ids
   iam_instance_profile   = var.iam_instance_profile
 
-  user_data = <<EOF
-#!/bin/bash
-# 업데이트 및 필요한 패키지 설치
-yum update -y
-yum install -y httpd wget
-
-# HTTP 서비스 시작 및 활성화
-systemctl start httpd
-systemctl enable httpd
-
-# App Server 및 DB 연결 테스트 페이지 생성
-cat <<EOT > /var/www/html/index.html
-<html>
-<head><title>Web Server - 연결 테스트</title></head>
-<body>
-<h1>Web Server - 연결 테스트 페이지</h1>
-
-<!-- App Server 연결 테스트 -->
-<h2>1. App Server 연결 테스트</h2>
-<iframe src="http://${var.app_server_private_ip}/test" width="600" height="200" frameborder="0">
-<p>App Server 연결 확인 실패 - App Server의 상태를 확인해주세요.</p>
-</iframe>
-
-<!-- DB 연결 테스트 결과 표시 -->
-<h2>2. DB 연결 테스트 결과</h2>
-<iframe src="http://${var.app_server_private_ip}/db_test" width="600" height="200" frameborder="0">
-<p>DB 연결 확인 실패 - App Server 및 DB 설정을 확인해주세요.</p>
-</iframe>
-
-</body>
-</html>
-EOT
-EOF
+  # User Data를 templatefile을 통해 외부 파일로부터 로드하고 변수 적용
+  user_data = templatefile("${path.module}/web-user-data.sh", {
+    app_server_private_ip = var.app_server_private_ip
+  })
 
   tags = {
     Name = "${var.project_name}-web-server"
   }
+}
+
+# 4 - AMI 생성 (웹 서버)
+resource "aws_ami_from_instance" "web_server_ami" {
+  name               = "${var.project_name}-web-server-ami"
+  source_instance_id = aws_instance.web_server.id
+  depends_on         = [aws_instance.web_server]  # 웹 서버 생성 완료 후 AMI 생성
+}
+
+# Launch Template for App Server
+resource "aws_launch_template" "app_server_lt" {
+  name          = "${var.project_name}-app-server-lt"
+  image_id      = module.ec2.app_server_ami_id  # AMI ID 참조
+  instance_type = var.instance_type
+
+  iam_instance_profile {
+    name = var.iam_instance_profile
+  }
+
+  network_interfaces {
+    security_groups = [module.sg.app_tier_sg_id]
+    subnet_id       = var.subnet_ids[1]  # 두 번째 서브넷
+  }
+
+  # User Data를 templatefile을 통해 외부 파일로부터 로드하고 변수 적용
+  user_data = templatefile("${path.module}/app-user-data.sh", {
+    rds_endpoint = var.rds_endpoint
+    db_username  = var.db_username
+    db_password  = var.db_password
+  })
+}
+
+# Launch Template for Web Server
+resource "aws_launch_template" "web_server_lt" {
+  name          = "${var.project_name}-web-server-lt"
+  image_id      = module.ec2.web_server_ami_id  # AMI ID 참조
+  instance_type = var.instance_type
+
+  iam_instance_profile {
+    name = var.iam_instance_profile
+  }
+
+  network_interfaces {
+    security_groups = [module.sg.web_tier_sg_id]
+    subnet_id       = var.subnet_ids[1]  # 두 번째 서브넷
+  }
+
+  # User Data를 templatefile을 통해 외부 파일로부터 로드하고 변수 적용
+  user_data = templatefile("${path.module}/web-user-data.sh", {
+    app_server_private_ip = var.app_server_private_ip
+  })
 }

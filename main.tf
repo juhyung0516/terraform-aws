@@ -51,14 +51,14 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
-# 앱 서버 생성 (2개의 인스턴스를 서로 다른 AZ에 배치)
+# 앱 서버 생성 AMI용
 module "app_server" {
   source              = "./modules/ec2"
-  count               = 2
+  count               = 1
   ami                 = var.app_ami
   instance_type       = var.app_instance_type
-  availability_zone   = element(var.availability_zones, count.index)
-  subnet_id           = element(module.vpc.private_subnet_ids, count.index)  # 서로 다른 AZ의 서브넷을 순차적으로 선택
+  availability_zones  = var.availability_zones
+  subnet_ids          = module.vpc.private_subnet_ids  # 서로 다른 AZ의 서브넷을 순차적으로 선택
   security_group_ids  = [module.sg.app_tier_sg_id]
   project_name        = var.project_name
 
@@ -69,30 +69,37 @@ module "app_server" {
   db_username         = var.db_username
   db_password         = var.db_password
   rds_endpoint        = module.rds.rds_endpoint
-
-  # 불필요 항목
-  app_server_private_ip = ""
 }
 
-# 웹 서버 생성 (2개의 인스턴스를 서로 다른 AZ에 배치)
+# 앱 서버 AMI 생성
+module "app_server_ami" {
+  source        = "./modules/ec2"
+  ami_id   = module.ec2.app_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+  project_name  = var.project_name
+}
+
+
+# 웹 서버 생성
 module "web_server" {
   source              = "./modules/ec2"
-  count               = 2
+  count               = 1
   ami                 = var.web_ami
   instance_type       = var.web_instance_type
-  availability_zone   = element(var.availability_zones, count.index)
-  subnet_id           = element(module.vpc.public_subnet_ids, count.index)  # 서로 다른 AZ의 서브넷을 순차적으로 선택
+  availability_zones  = var.availability_zones
+  subnet_ids          = module.vpc.public_subnet_ids  # 서로 다른 AZ의 서브넷을 순차적으로 선택
   security_group_ids  = [module.sg.web_tier_sg_id]
   project_name        = var.project_name
 
   # IAM 인스턴스 프로파일 전달
   iam_instance_profile = module.iam.iam_instance_profile
 
-  # App Server의 Private IP 전달 (첫 번째 인스턴스만 전달하도록 설정)
-  app_server_private_ip = module.app_server.private_ips[count.index]
+  # App Server의 Private IP 전달
+  app_server_private_ip = module.ec2.private_ips[0]
+}
 
-  # 불필요 항목 정리
-  db_username         = ""
-  db_password         = ""
-  rds_endpoint        = ""
+# 웹 서버 AMI 생성
+module "web_server_ami" {
+  source        = "./modules/ec2"
+  ami_id   = module.ec2.web_server_id  # 생성할 웹 서버 인스턴스 ID를 전달
+  project_name  = var.project_name
 }
