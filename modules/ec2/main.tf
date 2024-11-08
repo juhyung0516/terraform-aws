@@ -66,7 +66,7 @@ resource "aws_launch_template" "app_server_lt" {
   }
 
   network_interfaces {
-    security_groups = [module.sg.app_tier_sg_id]
+    security_groups = [var.security_group_id]
     subnet_id       = var.subnet_ids[1]  # 두 번째 서브넷
   }
 
@@ -89,7 +89,7 @@ resource "aws_launch_template" "web_server_lt" {
   }
 
   network_interfaces {
-    security_groups = [module.sg.web_tier_sg_id]
+    security_groups = [var.security_group_id]
     subnet_id       = var.subnet_ids[1]  # 두 번째 서브넷
   }
 
