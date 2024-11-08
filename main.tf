@@ -78,15 +78,23 @@ module "app_server" {
 # }
 
 # 생성 후 AMI 참조
+# module "app_server_lt" {
+#   source          = "./modules/ec2"
+#   project_name    = var.project_name
+#   ami_id          = module.app_server.app_server_ami_id           # 변수로 전달
+#   instance_type   = var.app_instance_type
+#   security_group_id = module.sg.app_tier_sg_id
+#   db_username         = var.db_username
+#   db_password         = var.db_password
+#   rds_endpoint        = module.rds.rds_endpoint
+# }
+
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
-  ami_id          = module.app_server.app_server_ami_id           # 변수로 전달
+  ami_id          = element(module.app_server.app_server_ami_ids, 0)  # 첫 번째 App Server AMI ID 참조
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
-  db_username         = var.db_username
-  db_password         = var.db_password
-  rds_endpoint        = module.rds.rds_endpoint
 }
 
 # # 웹 서버 생성
