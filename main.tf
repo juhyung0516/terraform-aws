@@ -72,6 +72,12 @@ module "app_server" {
 }
 
 # 생성 후 AMI 참조
+output "app_server_ami_id" {
+  description = "The AMI ID for the App Server"
+  value       = module.app_server.app_server_ami_id  # 모듈의 output을 참조
+}
+
+# 생성 후 AMI 참조
 module "app_server_lt" {
   source          = "./modules/ec2"
   project_name    = var.project_name
