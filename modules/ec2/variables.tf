@@ -77,9 +77,3 @@ variable "ami_id" {
   type        = string
   default     = ""
 }
-
-variable "app_server_ami_id" {
-  description = "AMI ID for the app server"
-  type        = string
-  default     = "ami-placeholder" # validate 단계에서 사용할 임시 값
-}
