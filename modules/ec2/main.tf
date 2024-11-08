@@ -29,6 +29,30 @@ resource "aws_ami_from_instance" "app_server_ami" {
   depends_on         = [aws_instance.app_server]  # 앱 서버 생성 완료 후 AMI 생성
 }
 
+resource "aws_launch_template" "app_server_lt" {
+  name          = "${var.project_name}-app-server-lt"
+  image_id      = var.ami_id                       # 전달된 AMI ID 사용
+  instance_type = var.instance_type
+
+  # IAM Instance Profile 설정
+  iam_instance_profile {
+    name = var.iam_instance_profile
+  }
+
+  # 네트워크 인터페이스 설정
+  network_interfaces {
+    security_groups = [var.security_group_id]
+    subnet_id       = var.subnet_ids[1]
+  }
+
+  # User Data를 templatefile을 통해 외부 파일로부터 로드하고 변수 적용
+  user_data = templatefile("${path.module}/app-user-data.sh", {
+    rds_endpoint = var.rds_endpoint
+    db_username  = var.db_username
+    db_password  = var.db_password
+  })
+}
+
 
 # # 3 - 웹 서버 생성
 # resource "aws_instance" "web_server" {
