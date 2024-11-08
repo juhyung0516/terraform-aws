@@ -82,6 +82,8 @@ module "app_server_lt" {
   ami_id          = var.app_server_ami_id
   instance_type   = var.app_instance_type
   security_group_id = module.sg.app_tier_sg_id
+  subnet_ids     = module.vpc.private_subnet_ids
+  availability_zones = var.availability_zones
 }
 
 # # 웹 서버 생성
