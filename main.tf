@@ -51,6 +51,10 @@ module "rds" {
   multi_az            = var.multi_az
 }
 
+module "ec2" {
+  source = "./modules/ec2"
+}
+
 # 앱 서버 생성 AMI용 및 AMI생성
 module "app_server" {
   source              = "./modules/ec2"
