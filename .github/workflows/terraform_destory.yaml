@@ -1,0 +1,47 @@
+name: "Terraform Destroy on Main Merge"
+
+on:
+  workflow_run:
+    workflows: ["Terraform Apply on Main Merge"] # Terraform Apply가 완료된 후 트리거
+    types:
+      - completed # Apply 워크플로가 완료되었을 때
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_LOG: INFO
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  destroy:
+    name: "Destroy Terraform Resources"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GitHub-OIDC-TERRAFORM
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve

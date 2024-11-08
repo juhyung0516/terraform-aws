@@ -1,0 +1,59 @@
+name: "Infracost Analysis"
+
+on:
+  workflow_run:
+    workflows: ["Terraform Plan and Cost Analysis"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  infracost-analysis:
+    runs-on: ubuntu-latest
+    name: "Infracost Cost Analysis"
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.2.5
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        env:
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+        run: terraform init -backend-config="bucket=${AWS_BUCKET_NAME}" -backend-config="key=${AWS_BUCKET_KEY_NAME}" -backend-config="region=${AWS_REGION}"
+
+      - name: Terraform Plan
+        run: terraform plan -out=plan.tfplan
+
+      - name: Convert Plan to JSON for Infracost
+        run: terraform show -json plan.tfplan > plan.json
+
+      - name: Setup Infracost
+        uses: infracost/actions/setup@v3
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      - name: Run Infracost Analysis
+        run: infracost breakdown --path=plan.json --format=json --out-file=infracost_output.json
+
+      - name: Upload Infracost Output to S3
+        run: |
+          aws s3 cp infracost_output.json s3://${{ secrets.AWS_BUCKET_NAME }}/infracost_output.json

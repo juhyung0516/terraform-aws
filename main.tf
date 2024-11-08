@@ -71,15 +71,15 @@ module "app_server" {
   rds_endpoint        = module.rds.rds_endpoint
 }
 
-module "app_server_lt" {
-  source          = "./modules/ec2"
-  project_name    = var.project_name
-  ami          = var.app_server_ami_id
-  instance_type   = var.app_instance_type
-  security_group_id = module.sg.app_tier_sg_id
-  subnet_ids     = module.vpc.private_subnet_ids
-  availability_zones = var.availability_zones
-}
+# module "app_server_lt" {
+#   source          = "./modules/ec2"
+#   project_name    = var.project_name
+#   ami          = var.app_server_ami_id
+#   instance_type   = var.app_instance_type
+#   security_group_id = module.sg.app_tier_sg_id
+#   subnet_ids     = module.vpc.private_subnet_ids
+#   availability_zones = var.availability_zones
+# }
 
 # # 웹 서버 생성
 # module "web_server" {

@@ -96,14 +96,3 @@ variable "app_instance_type" {
 variable "app_ami" {
   description = "AMI ID for app servers"
 }
-
-# app_server_ami_id 변수에 임시 기본값 지정
-variable "app_server_ami_id" {
-  description = "The AMI ID for the App Server"
-  type        = string
-}
-
-variable "app_server_ami_id" {
-  description = "AMI ID for the App Server"
-  default       = module.app_server[0].app_server_ami_id
-}

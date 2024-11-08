@@ -1,0 +1,51 @@
+name: Run Prowler
+
+on:
+  workflow_run:
+    workflows: ["Terraform Apply on Main Merge"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  prowler-scan:
+    runs-on: ubuntu-latest
+    name: Run Prowler Scan
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install and Run Prowler on Specific Resources
+        run: |
+          sudo apt update
+          sudo apt install -y pipx
+          pipx install prowler
+          prowler -v
+          TIMESTAMP=$(date '+%Y-%m-%d_%H-%M-%S')
+          echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
+          prowler aws -M json-asff --no-color > "prowler-report-$TIMESTAMP.json" || true
+
+      - name: Upload Prowler Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prowler-report
+          path: "prowler-report-*.json"
+
+      - name: Upload JSON Report to S3
+        run: |
+          aws s3 cp "prowler-report-${{ env.TIMESTAMP }}.json" s3://prowler/deploy-report/prowler-report-${{ env.TIMESTAMP }}.json
