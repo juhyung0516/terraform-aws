@@ -73,7 +73,7 @@ module "app_server" {
 
 output "app_server_ami_id" {
   description = "AMI ID for the App Server"
-  value       = module.app_server.app_server_ami_id
+  value       = module.app_server[0].app_server_ami_id
 }
 
 module "app_server_lt" {
